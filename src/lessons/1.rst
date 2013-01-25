@@ -1,0 +1,15 @@
+Lesson 1
+########
+
+:date: 2013-01-25 
+:summary: Introduction to kinematics
+:category: lessons
+:tags: kinematics, algebra, physics
+:status: draft
+
+Introduction
+------------
+
+Kinematics is about motion ....
+
+   
