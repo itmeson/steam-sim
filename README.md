@@ -1,4 +1,14 @@
-steam-sim
-=========
+STEAM Website
+=============
 
-Draft of simulation learning activities for science/tech/engineering/art/mathematics
+You can view my live development copy of the website at *[steam.wilhall.com](http://steam.wilhall.com/)*.
+
+
+Dependencies
+------------
+
+This website runs with [Python 2.6/2.7](http://www.python.org/) on the [CherryPy framework](http://www.cherrypy.org/) under [Apache 2.2](http://httpd.apache.org/), and has the following additional dependencies:
+
+ * [mako](http://www.makotemplates.org/)
+ * [SQLAlchemy](http://www.sqlalchemy.org/)
+ * Probably [Pygments](http://pygments.org/) in the near future

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+	<meta charset="utf-8">
+	<title><%block name="title">STEAM</%block></title>
+	<meta name="description" content="">
+	<meta name="author" content="STEAM Club">
+	
+	<link href="/static/css/base.css" type="text/css" rel="stylesheet" />
+	<link href="/static/css/bootstrap.css" rel="stylesheet" type="text/css" />
+	<link href="/static/css/jquery-ui-1.9.2.custom.min.css" rel="stylesheet" type="text/css" />
+	<link href="/static/css/bootstrap-responsive.css" rel="stylesheet">
+	
+	<%block name="head"></%block>
+
+	<!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+	<!--[if lt IE 9]>
+		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<link rel="shortcut icon" href="../assets/ico/favicon.png">
+</head>
+
+<body>
+
+	<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+		<div class="container">
+			<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			</a>
+			<a class="brand" href="#">STEAM</a>
+			<div class="nav-collapse collapse">
+			<ul class="nav">
+				<li class="active"><a href="#">Home</a></li>
+				<li><a href="#about">About</a></li>
+				<li><a href="#contact">Contact</a></li>
+				<li class="dropdown">
+				<a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
+				<ul class="dropdown-menu">
+					<li><a href="#">Action</a></li>
+					<li><a href="#">Long Action</a></li>
+					<li><a href="#">Longer Action</a></li>
+					<li class="divider"></li>
+					<li class="nav-header">Nav header</li>
+					<li><a href="#">Separated link</a></li>
+					<li><a href="#">Another separated link</a></li>
+				</ul>
+				</li>
+			</ul>
+			<form class="navbar-form pull-right">
+				<input class="span2" type="text" placeholder="Email">
+				<input class="span2" type="password" placeholder="Password">
+				<button type="submit" class="btn">Login</button>
+			</form>
+			</div>
+		</div>
+		</div>
+	</div>
+
+	<div class="container">
+		<%block name="content"></%block>
+
+		<hr />
+		<footer>
+			<p>STEAM Club</p>
+		</footer>
+	</div>
+
+	<script src="/static/js/jquery-1.9.0.min.js"></script>
+	<script src="/static/js/jquery-ui-1.9.2.custom.min.js"></script>
+	<script src="/static/js/bootstrap.min.js"></script>
+	<script src="/static/js/jquery.cookie.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			
+			//base.html global js
+			
+			
+			//child template js
+			<%block name="scripts"></%block>
+		});
+	</script>
+
+	</body>
+</html>
