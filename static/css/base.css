@@ -1,5 +1,54 @@
+/*++ base.html ++*/
+
 body {
 	background-color: #ffffff !important;
 	padding-top: 60px;
 	padding-bottom: 40px;
 }
+
+.inline-login {
+	float: left;
+	margin-left: 3px;
+}
+
+/*-- End base.html --*/
+
+
+/*++ Bootstrap Custom Labels/Badges ++*/
+
+.label-science, .badge-science {
+	background-color: #468847 !important;
+}
+
+.label-technology, .badge-technology {
+	background-color: #3a87ad !important;
+}
+
+.label-engineering, .badge-engineering {
+	background-color: #f89406 !important;
+}
+
+.label-art, .badge-art {
+	background-color: #7a00cc !important;
+}
+
+.label-math, .badge-math {
+	background-color: #b94a48 !important;
+}
+
+/*-- End Bootstrap Custom Labels/Badges --*/
+
+
+/*++ QTip2 ++*/
+
+.qtip {
+	max-width: 400px !important;
+}
+
+.qtip-steam {
+	color: #ffffff !important;
+	background-color: #006dcc !important;
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+}
+
+/*-- End QTip2 --*/
