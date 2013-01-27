@@ -1,26 +1,38 @@
 USE steam;
 
-DROP TABLE IF EXISTS `users`;
-| uas_users_accounts | CREATE TABLE `uas_users_accounts` (
-  `User_ID` int(11) NOT NULL AUTO_INCREMENT,
-  `School_ID` int(11) NOT NULL,
-  `Username` varchar(25) NOT NULL,
-  `Email` varchar(60) NOT NULL,
-  `Password` varchar(60) NOT NULL,
-  `FirstName` varchar(25) NOT NULL,
-  `LastName` varchar(25) NOT NULL,
-  PRIMARY KEY (`User_ID`),
-  UNIQUE KEY `Username` (`Username`),
-  UNIQUE KEY `Email` (`Email`),
-  UNIQUE KEY `Password` (`Password`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 |
+DROP TABLE IF EXISTS `user_accounts`;
+CREATE TABLE `user_accounts` (
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`username` VARCHAR(25) NOT NULL UNIQUE,
+	`email` VARCHAR(60) NOT NULL UNIQUE,
+	`password` VARCHAR(60) NOT NULL,
+	`first_name` VARCHAR(25) NOT NULL,
+	`last_name` VARCHAR(25) NOT NULL,
+	`admin` BOOLEAN NOT NULL DEFAULT FALSE,
+	`superadmin` BOOLEAN NOT NULL DEFAULT FALSE 
+	
+);
 
-DROP TABLE IF EXISTS `sessions`;
-| uas_users_sessions | CREATE TABLE `uas_users_sessions` (
-  `Session_ID` int(11) NOT NULL AUTO_INCREMENT,
-  `User_ID` int(11) NOT NULL,
-  `Token` varchar(12) NOT NULL,
-  `LastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`Session_ID`),
-  UNIQUE KEY `Token` (`Token`)
+DROP TABLE IF EXISTS `user_sessions`;
+CREATE TABLE `user_sessions` (
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`user_id` INT NOT NULL UNIQUE,
+	`token` VARCHAR(12) NOT NULL UNIQUE,
+	`lastupdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+DROP TABLE IF EXISTS `perms_problem`;
+CREATE TABLE `perms_problem` (
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`user_id` INT NOT NULL,
+	`problem_id` INT NOT NULL,
+	`level` INT NOT NULL DEFAULT 0
+);
+
+DROP TABLE IF EXISTS `perms_problemset`;
+CREATE TABLE `perms_problemset` (
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`user_id` INT NOT NULL,
+	`problemset_id` INT NOT NULL,
+	`level` INT NOT NULL DEFAULT 0
 );

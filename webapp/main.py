@@ -71,15 +71,18 @@ class STEAM(object):
 		if cherrypy.request.method != 'POST':
 			return tmplr("register.html")
 		
-		if not all(k in kwargs for k in ('email', 'username', 'password', 'confirm', 'first_name', 'last_name') or not all(kwargs[k] != "" for k in kwargs)):
-			return tmplr("register.html", success=False, error_message="All fields are required", fields=kwargs)
+		if not all(k in kwargs for k in ('username', 'password', 'email', 'confirm', 'first_name', 'last_name') or not all(kwargs[k] != "" for k in kwargs)):
+			return tmplr("register.html", success=False, message="All fields are required", fields=kwargs)
 		
 		if kwargs['password'] != kwargs['confirm']:
-			return tmplr("login.html", success=False, error_message="Passwords do not match", fields=kwargs)
+			return tmplr("register.html", success=False, message="Passwords do not match", fields=kwargs)
 		
-		success = auth.register(kwargs['email'], kwargs['username'], kwargs['password'], kwargs['first_name'], kwargs['last_name'], kwargs['admin'])
+		result = auth.register(kwargs['username'], kwargs['password'], kwargs['email'], kwargs['first_name'], kwargs['last_name'], kwargs['admin'], kwargs['superadmin'])
 		
-		raise cherrypy.HTTPRedirect("/register", success=success, message="")
+		if not result.success:
+			return tmplr("login.html", success=False, message=result.message, fields=kwargs)
+		
+		raise cherrypy.HTTPRedirect("/register", success=True, message="")
 	
 	# Login Page
 	# /login
@@ -90,32 +93,27 @@ class STEAM(object):
 			if auth.authenticated():
 				raise cherrypy.HTTPRedirect("/user/cpanel")
 			else:
-				return tmplr("login.html", success=True, error_message="", token="")
+				return tmplr("login.html", success=True, message="")
 		
 		if not all(k in kwargs for k in ('username', 'password') or not all(kwargs[k] != "" for k in kwargs)):
-			return tmplr("login.html", success=False, error_message="All fields are required", fields=json.dumps(kwargs))
+			return tmplr("login.html", success=False, message="All fields are required", fields=kwargs)
 		
-		success, error_message, token = auth.login(kwargs['username'], kwargs['password'])
+		result = auth.login(kwargs['username'], kwargs['password'])
 		
-		if not success:
-			return tmplr("login.html", success=success, error_message=error_message, fields=json.dumps(kwargs))
+		if not result.success:
+			return tmplr("login.html", success=False, message=result.message, fields=kwargs)
 		else:
 			if auth.is_admin(token):
-				return tmplr("admin_cpanel.html", initsession=token, admin=auth.is_admin(token), session=auth.getSession(token))
+				return tmplr("admin_cpanel.html", initsession=token, admin=True, session=auth.getSession(token))
 			else:
-				return tmplr("cpanel_home.html", initsession=token, admin=auth.is_admin(token), session=auth.getSession(token))
+				return tmplr("cpanel_home.html", initsession=token, admin=False, session=auth.getSession(token))
 		
 	# Auth: Logout
 	# /auth/logout
 	@cherrypy.expose
 	def auth_logout(self):
-		auth.logout()
 		
-		try:
-			cherrypy.response.cookie['steam_token'] = cherrypy.request.cookie['steam_token'].value
-			cherrypy.response.cookie['steam_token']['expires'] = 0
-		except:
-			pass
+		auth.logout()
 		
 		raise cherrypy.HTTPRedirect("/login")
 	

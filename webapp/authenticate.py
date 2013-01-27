@@ -1,9 +1,21 @@
 from string import letters, digits
-from sqlalchemy.sql.functions import now
 import random
 import bcrypt
 import json
 import cherrypy
+
+# Dictionary that allows for use of .attribute syntax
+class Result(dict):
+	def __init__(self, d=None):
+		if d:
+			for k, v in d.iteritems():
+				self[k] = v
+	
+	def __getattr__(self, name):
+		try:
+			return self.__getitem__(name)
+		except KeyError:
+			return super(DictObj,self).__getattr__(name)
 
 def session(func):
 	def wrapped(self, *args, **kwargs):
@@ -17,198 +29,183 @@ class AuthHelper(object):
 	
 	def __init__(self, db):
 		self.db = db
+		self.cookiename = "steam_token"
+		self.users = self.db.get_table('user_accounts')
+		self._users = "user_accounts"
+		self.sessions = self.db.get_table('user_sessions')
+		self._sessions = "user_sessions"
+		self.perms_problem = self.db.get_table('perms_problem')
+		self.perms_problemset = self.db.get_table('perms_problemset')
 	
-	# UTIL: Generate session token or App ID
+	##
+	# Util: Generate Token
+	##
 	def generateToken(self, length):
 		return ''.join(random.choice(letters + digits) for x in range(length))
 	
-	# UTIL: Delete old sessions
-	def deleteStaleSessions(self):
-		self.db.raw("DELETE FROM sessions WHERE lastupdate < (NOW() - INTERVAL 10 MINUTE)")
+	##
+	# Util: Get Token If Exists
+	##
+	def getTokenIfExists(self):
+		return cherrypy.request.cookie[self.cookiename].value if self.cookiename in cherrypy.request.cookie else None
 	
-	# ACTION: Heartbeat
-	def updateSession(self, token=None):
-		if not token:
-			if 'uvb_token' in cherrypy.request.cookie:
-				token = cherrypy.request.cookie['uvb_token'].value
-			else:
-				return {'success': 0, 'ecode': 0}
-		sessions = self.db.get_table('sessions')
-		rows = self.db.update(sessions, {'lastupdate': now()}, sessions.c.token == token)
-		return {'success': 1, 'message': "Session Updated"}
-	
-	# UTIL: Check if user is logged in
-	@session
-	def isLoggedIn(self, user_id):
-		sessions = self.db.get_table('sessions')
-		rows = self.db.select(sessions, sessions.c.user_id == user_id)
-		if len(rows):
-			return True
-		return False
-	
-	# UTIL: Check if session is valid
-	@session
-	def sessionValid(self, token):
-		sessions = self.db.get_table('sessions')
-		rows = self.db.select(sessions, sessions.c.token == token)
-		if len(rows):
-			return True
-		return False
-	
-	# ACTION: getsession
-	@session
-	def getSession(self, token=None):
-		self.deleteStaleSessions()
-		self.updateSession()
-		
-		if not token:
-			if 'uvb_token' not in cherrypy.request.cookie:
-				return {'success': 0, 'message': "Invalid Token"}
-			token = cherrypy.request.cookie['uvb_token'].value
-		
-		sessions = self.db.get_table('sessions')
-		rows = self.db.select(sessions, sessions.c.token == token)
-		if not len(rows):
-			return {'success': 0, 'message': "Invalid Token"}
-		
-		users = self.db.get_table('users')
-		rows = self.db.select(users, users.c.id == rows[0].user_id)
-		if not len(rows):
-			return {'success': 0, 'message': "Invalid Token"}
-		
-		return {'success': 1, 'token': token, 'user_id': rows[0].id, 'username': rows[0].username, 'first_name': rows[0].first_name, 'last_name': rows[0].last_name, 'message': "Welcome, %s!" % rows[0].username}
-	
-	# UTIL: Create new session
-	@session
+	##
+	# Util: Create New Session
+	##
 	def createSession(self, id):
-		sessions = self.db.get_table('sessions')
-		self.db.raw("DELETE FROM sessions WHERE user_id = %s" % id)
+		self.db.delete(self.sessions, sessions.c.user_id == id);
 		token = self.generateToken(12)
-		
-		self.db.insert(sessions, {'user_id': id, 'token': token})
+		self.db.insert(self.sessions, {'user_id': id, 'token': token})
 		return token
 	
-	# ACTION: Logout
+	##
+	# Util: Is User Authenticated?
+	##
 	@session
-	def logout(self):
-		sessions = self.db.get_table('sessions')
-		self.db.raw("DELETE FROM sessions WHERE token = '%s'" % cherrypy.request.cookie['uvb_token'].value)
-		return {'success': 1, 'message': "Logged Out"}
-	
-	# ACTION: Login
-	@session
-	def login(self, username, password):
-		self.deleteStaleSessions()
-		
-		users = self.db.get_table('users')
-		rows = self.db.select(users, users.c.username == username)
-		if not len(rows):
-			return False, "Invalid Username", False
-		
-		if(bcrypt.hashpw(password, rows[0].password) != rows[0].password):
-			return False, "Invalid Password", False
-		
-		token = self.createSession(rows[0].id)
-		
-		return True, "", token
-	
-	# ACTION: Register
-	@session
-	def register(self, email, username, password, first_name, last_name, admin):
-		username = username.lower()
-		users = self.db.get_table('users')
-		rows = self.db.select(users, users.c.username == username)
-		if len(rows):
-			return False
-		
-		hashed = bcrypt.hashpw(password, bcrypt.gensalt())
-		self.db.insert(users, {'email': email, 'username': username, 'password': hashed, 'first_name': first_name, 'last_name': last_name, 'admin': admin})
-		rows = self.db.select(users, users.c.username == username)
-		token = self.createSession(rows[0].id)
-		return True
-	
-	@session
-	def get_session_by_token(self, token=None):
-		if not token:
-			if 'uvb_token' not in cherrypy.request.cookie:
-				return None
-			
-			sessions = self.db.get_table('sessions')
-			rows = self.db.select(sessions, sessions.c.token == cherrypy.request.cookie['uvb_token'].value)
-			if len(rows) == 0:
-				return None
-			else:
-				return rows[0]
-		else:
-			sessions = self.db.get_table('sessions')
-			rows = self.db.select(sessions, sessions.c.token == token)
-			if len(rows) == 0:
-				return None
-			else:
-				return rows[0]
-	
-	@session
-	def get_session_by_name(self, user):
-		if 'uvb_token' not in cherrypy.request.cookie:
-			return None
-		
-		users = self.db.get_table('users')
-		rows = self.db.select(users, users.c.username == user)
-		if len(rows) == 0:
-			return None
-		user = rows[0]
-		
-		sessions = self.db.get_table('sessions')
-		rows = self.db.select(sessions, (sessions.c.token == cherrypy.request.cookie['uvb_token'].value) & (sessions.c.user_id == user.id))
-		if len(rows) == 0:
-			return None
-		else:
-			return rows[0]
-	
-	@session
-	def logged_in(self, user=None):
-		if user:
-			if self.get_session_by_name(user):
-				return True
-		if self.get_session_by_token():
+	def authenticated(self, token=None):
+		if self.getSession(token)['success']:
 			return True
 		return False
 	
-	@session
-	def authenticated(self, users=None):
-		if not users:
-			if self.get_session_by_token():
-				return True
-			return False
-		for user in users:
-			if self.logged_in(user):
-				return True
-	
+	##
+	# Util: Is User Admin?
+	##
 	@session
 	def is_admin(self, token=None):
 		if not token:
-			session = self.get_session_by_token()
-			if not session:
-				return None
-			users = self.db.get_table('users')
-			rows = self.db.select(users, users.c.id == session.user_id)
-			if len(rows) == 0:
-				return None
-			else:
-				if rows[0].admin:
-					return True
-				else:
-					return False
-		else:
-			session = self.get_session_by_token(token)
-			if not session:
-				return None
-			users = self.db.get_table('users')
-			rows = self.db.select(users, users.c.id == session.user_id)
-			if len(rows) == 0:
-				return None
-			else:
-				if rows[0].admin:
-					return True
-				else:
-					return False
+			token = self.getTokenIfExists()
+		
+		if not token:
+			return False
+		
+		session = self.getSession(token)
+		if not session['success']:
+			return False
+		
+		users = self.db.select(self.users, self.users.c.id == session['user_id'])
+		
+		if not len(users):
+			return False
+		
+		if not users[0].admin:
+			return False
+		return True
+	
+	##
+	# Util: Is User Super Admin?
+	##
+	@session
+	def is_superadmin(self, token=None):
+		if not token:
+			token = self.getTokenIfExists()
+		
+		if not token:
+			return False
+		
+		session = self.getSession(token)
+		if not session['success']:
+			return False
+		
+		users = self.db.select(self.users, self.users.c.id == session['user_id'])
+		
+		if not len(users):
+			return False
+		
+		if not users[0].superadmin:
+			return False
+		return True
+	
+	##
+	# Auth: Delete stale sessions
+	##
+	def deleteStaleSessions(self):
+		self.db.raw("DELETE FROM %s WHERE lastupdate < (NOW() - INTERVAL 10 MINUTE)" % self._sessions)
+		return Result({'success': True})
+	
+	##
+	# Auth: Update Session
+	##
+	def updateSession(self, token=None):
+		if not token:
+			token = self.getTokenIfExists()
+		
+		if not token:
+			return Result({'success': False, 'ecode': 0, 'message': "Invalid Token"})
+		
+		self.db.update(self.sessions, {'lastupdate': now()}, self.sessions.c.token == token)
+		return Result({'success': True})
+	
+	##
+	# Auth: Get Session
+	##
+	@session
+	def getSession(self, token=None):
+		if not token:
+			token = self.getTokenIfExists()
+		
+		if not token:
+			return Result({'success': False, 'ecode': 0, 'message': "Invalid Token"})
+		
+		sessions = self.db.select(self.sessions, self.sessions.c.token == token)
+		
+		if not len(sessions):
+			return Result({'success': False, 'ecode': 0, 'message': "Invalid Token"})
+		
+		users = self.db.select(self.users, self.users.c.id == sessions[0].user_id)
+		
+		if not len(users):
+			return Result({'success': False, 'ecode': 1, 'message': "User does not exist"})
+		
+		return Result({'success': True, 'token': token, 'user_id': users[0].id, 'username': users[0].username, 'first_name': users[0].first_name, 'last_name': users[0].last_name, 'admin': users[0].admin, 'superadmin': users[0].superadmin})
+		
+	##
+	# Auth: Logout
+	##
+	@session
+	def logout(self, token=None):
+		if not token:
+			token = self.getTokenIfExists()
+		
+		if not token:
+			return Result({'success': False, 'ecode': 0, 'message': "Invalid Token"})
+		
+		self.db.delete(self.sessions, self.sessions.c.token == token)
+		
+		cherrypy.response.cookie[self.cookiename] = token
+		cherrypy.response.cookie[self.cookiename]['expires'] = 0
+			
+		return Result({'success': True})
+	
+	##
+	# Auth: Login
+	##
+	@session
+	def login(self, username, password):
+		
+		users = self.db.select(self.users, self.users.c.username == username)
+		if not len(users):
+			return Result({'success': False, 'ecode': 0, 'message': "Invalid Username"})
+		
+		if(bcrypt.hashpw(password, users[0].password) != users[0].password):
+			return Result({'success': False, 'ecode': 1, 'message': "Invalid Password"})
+		
+		token = self.createSession(users[0].id)
+		
+		return Result({'success': True, 'token': token})
+		
+	##
+	# Register
+	##
+	@session
+	def register(self, username, password, email, first_name, last_name, admin, superadmin):
+		username = username.lower()
+		users = self.db.select(self.users, self.users.c.username == username)
+		if len(users):
+			return Result({'success': False, 'ecode': 0, 'message': "Username already exists"})
+		
+		hashed = bcrypt.hashpw(password, bcrypt.gensalt())
+		
+		self.db.insert(self.users, {'username': username, 'password': hashed, 'email': email, 'first_name': first_name, 'last_name': last_name, 'admin': admin, 'superadmin': superadmin})
+		users = self.db.select(self.users, self.users.c.username == username)
+		return Result({'success': True})
+		
