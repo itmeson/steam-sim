@@ -69,20 +69,31 @@ class STEAM(object):
 	@cherrypy.expose
 	def register_page(self, **kwargs):
 		if cherrypy.request.method != 'POST':
-			return tmplr("register.html")
+			return tmplr("register.html", success=True, message="")
 		
-		if not all(k in kwargs for k in ('username', 'password', 'email', 'confirm', 'first_name', 'last_name') or not all(kwargs[k] != "" for k in kwargs)):
-			return tmplr("register.html", success=False, message="All fields are required", fields=kwargs)
+		if not all(k in kwargs for k in ('first_name', 'last_name', 'username', 'password', 'password_confirm', 'email', 'email_confirm') or not all(kwargs[k] != "" for k in kwargs)):
+			del kwargs['password']
+			del kwargs['password_confirm']
+			return tmplr("register.html", success=False, message="All fields are required", fields=json.dumps(kwargs))
 		
-		if kwargs['password'] != kwargs['confirm']:
-			return tmplr("register.html", success=False, message="Passwords do not match", fields=kwargs)
+		if kwargs['password'] != kwargs['password_confirm']:
+			del kwargs['password']
+			del kwargs['password_confirm']
+			return tmplr("register.html", success=False, message="Passwords do not match", fields=json.dumps(kwargs))
 		
-		result = auth.register(kwargs['username'], kwargs['password'], kwargs['email'], kwargs['first_name'], kwargs['last_name'], kwargs['admin'], kwargs['superadmin'])
+		if kwargs['email'] != kwargs['email_confirm']:
+			del kwargs['password']
+			del kwargs['password_confirm']
+			return tmplr("register.html", success=False, message="Emails do not match", fields=json.dumps(kwargs))
+		
+		result = auth.register(kwargs['username'], kwargs['password'], kwargs['email'], kwargs['first_name'], kwargs['last_name'], False, False)
 		
 		if not result.success:
-			return tmplr("login.html", success=False, message=result.message, fields=kwargs)
+			return tmplr("register.html", success=False, message=result.message, fields=json.dumps(kwargs))
 		
-		raise cherrypy.HTTPRedirect("/register", success=True, message="")
+		emailer.send("STEAM Club", "%s %s" % (result.first_name, result.last_name), "steam@wilhall.com", result.email, "Activate Your Account", "Visit the following link to activate your account: http://steam.wilhall.com/auth/activate/%s" % result.vtoken)
+		
+		return tmplr("register.html", success=True, message="Thank you for registering! We will be sending you a confirmation email shortly.")
 	
 	# Login Page
 	# /login
@@ -91,23 +102,51 @@ class STEAM(object):
 	
 		if cherrypy.request.method != 'POST':
 			if auth.authenticated():
-				raise cherrypy.HTTPRedirect("/user/cpanel")
+				raise cherrypy.HTTPRedirect("/user/account")
 			else:
 				return tmplr("login.html", success=True, message="")
 		
 		if not all(k in kwargs for k in ('username', 'password') or not all(kwargs[k] != "" for k in kwargs)):
-			return tmplr("login.html", success=False, message="All fields are required", fields=kwargs)
+			return tmplr("login.html", success=False, message="All fields are required", fields=json.dumps({'username': kwargs['username']}))
 		
 		result = auth.login(kwargs['username'], kwargs['password'])
 		
 		if not result.success:
-			return tmplr("login.html", success=False, message=result.message, fields=kwargs)
+			return tmplr("login.html", success=False, message=result.message, fields=json.dumps({'username': kwargs['username']}))
 		else:
-			if auth.is_admin(token):
-				return tmplr("admin_cpanel.html", initsession=token, admin=True, session=auth.getSession(token))
-			else:
-				return tmplr("cpanel_home.html", initsession=token, admin=False, session=auth.getSession(token))
+			return tmplr("user_account.html", initsession=result.token, admin=auth.is_admin(result.token), superadmin=auth.is_superadmin(result.token), session=auth.getSession(result.token))
+	
+	# Activate Page
+	# /auth/activate
+	@cherrypy.expose
+	def auth_activate(self, **kwargs):
 		
+		if 'vtoken' not in kwargs:
+			raise cherrypy.HTTPRedirect("/login")
+		
+		if not auth.vtokenValid(kwargs['vtoken']):
+			raise cherrypy.HTTPRedirect("/login")
+		
+		if cherrypy.request.method != 'POST':
+			if auth.authenticated():
+				raise cherrypy.HTTPRedirect("/user/account")
+			else:
+				return tmplr("auth_activate.html", vtoken=kwargs['vtoken'], success=True, message="")
+				
+		
+		if not all(k in kwargs for k in ('username', 'password') or not all(kwargs[k] != "" for k in kwargs)):
+			return tmplr("auth_activate.html", vtoken=kwargs['vtoken'], success=False, message="All fields are required", fields=json.dumps({'username': kwargs['username']}))
+		
+		lresult = auth.login(kwargs['username'], kwargs['password'], ignoreactive=True)
+		if not lresult.success:
+			return tmplr("auth_activate.html", vtoken=kwargs['vtoken'], success=False, message=lresult.message, fields=json.dumps({'username': kwargs['username']}))
+		
+		aresult = auth.activate(kwargs['vtoken'])
+		if not aresult.success:
+			return tmplr("auth_activate.html", vtoken=kwargs['vtoken'], success=False, message=kresult.message, fields=json.dumps({'username': kwargs['username']}))
+			
+		return tmplr("user_account.html", initsession=lresult.token, admin=auth.is_admin(lresult.token), superadmin=auth.is_superadmin(lresult.token), session=auth.getSession(lresult.token))
+	
 	# Auth: Logout
 	# /auth/logout
 	@cherrypy.expose
@@ -134,6 +173,14 @@ class STEAM(object):
 			jslog.write("\n[%s] <%s><%s: Line %s> %s" % (timestamp(), kwargs['href'], kwargs['script'], kwargs['line'], kwargs['msg']))
 		
 		return json.dumps({'success': True})
+
+class Account(object):
+	# User Account Page
+	# /user/account
+	@cherrypy.expose
+	def user_account(self):
+		# TODO: Useful stuff
+		return tmplr("user_account.html")
 
 class Admin(object):
 	# For any admin views we have

@@ -37,12 +37,12 @@
 			<span class="icon-bar"></span>
 			<span class="icon-bar"></span>
 			</a>
-			<a class="brand" href="#">S.T.E.A.M.</a>
+			<a class="brand" href="/">S.T.E.A.M.</a>
 			<div class="nav-collapse collapse">
 			<ul class="nav">
-				<li class="active"><a href="#">Home</a></li>
-				<li><a href="#about">About</a></li>
-				<li><a href="#contact">Contact</a></li>
+				<li class="active"><a href="/">Home</a></li>
+				<li><a href="/about">About</a></li>
+				<li><a href="/contact">Contact</a></li>
 				<li class="dropdown">
 				<a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
 				<ul class="dropdown-menu">
@@ -56,17 +56,17 @@
 				</ul>
 				</li>
 			</ul>
-			<form class="navbar-form pull-right">
+			<form class="navbar-form pull-right" id="login_form_inline" method="POST" action="/login">
 				<div class="input-prepend inline-login">
-					<span class="add-on"><i class="icon-envelope"></i></span>
-					<input class="span2" type="text" placeholder="Email">
+					<span class="add-on"><i class="icon-user"></i></span>
+					<input class="span2" type="text" name="username" id="login_username_inline" placeholder="Username">
 				</div>
 				<div class="input-prepend inline-login">
 					<span class="add-on"><i class="icon-key"></i></span>
-					<input class="span2" type="password" placeholder="Password">
+					<input class="span2" type="password" name="password" id="login_password_inline" placeholder="Password">
 				</div>
-				<a class="btn btn-info inline-login" href="#">
-				<i class="icon-user"></i> Login</a>
+				<a class="btn btn-info disabled inline-login" id="login_submit_inline" href="#">
+				<i class="icon-lock"></i> Login</a>
 			</form>
 			</div>
 		</div>
@@ -105,6 +105,25 @@
 				show: { event: "mouseenter" },
 				hide: { event: "mouseleave" }
 			});
+			
+			$("#login_form_inline input").keyup(function(){
+				if($("#login_username_inline").val() && $("#login_password_inline").val()) {
+					$("#login_submit_inline").removeClass("disabled");
+				} else {
+					$("#login_submit_inline").addClass("disabled");
+				}
+			});
+			
+			$("#login_submit_inline").click(function(event){
+				event.preventDefault();
+				event.stopPropagation();
+				
+				if(!$(this).hasClass("disabled")) {
+					$("#login_form_inline").submit();
+				}
+		
+		return false;
+	});
 			
 			//child template js
 			<%block name="scripts"></%block>

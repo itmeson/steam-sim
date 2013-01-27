@@ -34,6 +34,7 @@ class AuthHelper(object):
 		self._users = "user_accounts"
 		self.sessions = self.db.get_table('user_sessions')
 		self._sessions = "user_sessions"
+		self.vtokens = self.db.get_table('verification_tokens')
 		self.perms_problem = self.db.get_table('perms_problem')
 		self.perms_problemset = self.db.get_table('perms_problemset')
 	
@@ -53,10 +54,27 @@ class AuthHelper(object):
 	# Util: Create New Session
 	##
 	def createSession(self, id):
-		self.db.delete(self.sessions, sessions.c.user_id == id);
+		self.db.delete(self.sessions, self.sessions.c.user_id == id);
 		token = self.generateToken(12)
 		self.db.insert(self.sessions, {'user_id': id, 'token': token})
 		return token
+	
+	##
+	# Util: Create Verification Token (for verification emails)
+	##
+	def createVerificationToken(self, id):
+		vtoken = self.generateToken(48)
+		self.db.insert(self.vtokens, {'user_id': id, 'token': vtoken})
+		return vtoken
+	
+	##
+	# Util: Check to see if Verification Token exists
+	##
+	def vtokenValid(self, vtoken):
+		vtokens = self.db.select(self.vtokens, self.vtokens.c.token == vtoken)
+		if not len(vtokens):
+			return False
+		return True
 	
 	##
 	# Util: Is User Authenticated?
@@ -156,7 +174,71 @@ class AuthHelper(object):
 		if not len(users):
 			return Result({'success': False, 'ecode': 1, 'message': "User does not exist"})
 		
-		return Result({'success': True, 'token': token, 'user_id': users[0].id, 'username': users[0].username, 'first_name': users[0].first_name, 'last_name': users[0].last_name, 'admin': users[0].admin, 'superadmin': users[0].superadmin})
+		if not users[0].active:
+			return Result({'success': False, 'ecode': 2, 'message': "This user account is deactivated"})
+		
+		return Result({'success': True, 'token': token, 'user_id': users[0].id, 'username': users[0].username, 'first_name': users[0].first_name, 'last_name': users[0].last_name, 'active': users[0].active, 'admin': users[0].admin, 'superadmin': users[0].superadmin})
+	
+	##
+	# Auth: Login Page
+	##
+	@session
+	def login(self, username, password, ignoreactive=False):
+		
+		users = self.db.select(self.users, self.users.c.username == username)
+		if not len(users):
+			return Result({'success': False, 'ecode': 0, 'message': "Invalid Username"})
+		
+		if not ignoreactive:
+			if not users[0].active:
+				return Result({'success': False, 'ecode': 1, 'message': "This user account is deactivated"})
+		
+		if bcrypt.hashpw(password, users[0].password) != users[0].password:
+			return Result({'success': False, 'ecode': 2, 'message': "Invalid Password"})
+		
+		return Result({'success': True, 'token': self.createSession(users[0].id)})
+		
+	##
+	# Auth: Register
+	##
+	@session
+	def register(self, username, password, email, first_name, last_name, admin, superadmin):
+		username = username.lower()
+		users = self.db.select(self.users, self.users.c.username == username)
+		if len(users):
+			return Result({'success': False, 'ecode': 0, 'message': "Username already exists"})
+		
+		users = self.db.select(self.users, self.users.c.email == email)
+		if len(users):
+			return Result({'success': False, 'ecode': 0, 'message': "The provided email has already been used for registration"})
+		
+		hashed = bcrypt.hashpw(password, bcrypt.gensalt())
+		
+		self.db.insert(self.users, {'username': username, 'password': hashed, 'email': email, 'first_name': first_name, 'last_name': last_name, 'admin': admin, 'superadmin': superadmin})
+		users = self.db.select(self.users, self.users.c.username == username)
+		
+		vtoken = self.createVerificationToken(users[0].id)
+		
+		return Result({'success': True, 'vtoken': vtoken, 'first_name': users[0].first_name, 'last_name': users[0].last_name, 'email': users[0].email})
+	
+	##
+	# Auth: Activate
+	##
+	@session
+	def activate(self, vtoken):
+		vtokens = self.db.select(self.vtokens, self.vtokens.c.token == vtoken)
+		if not len(vtokens):
+			return Result({'success': False, 'ecode': 0, 'message': "Invalid Verification Token"})
+		
+		users = self.db.select(self.users, self.users.c.id == vtokens[0].user_id)
+		if not len(users):
+			return Result({'success': False, 'ecode': 0, 'message': "Invalid Verification Token"})
+		
+		self.db.update(self.users, {'active': True}, self.users.c.id == users[0].id)
+		
+		self.db.delete(self.vtokens, self.vtokens.c.token == vtoken)
+		
+		return Result({'success': True})
 		
 	##
 	# Auth: Logout
@@ -174,38 +256,5 @@ class AuthHelper(object):
 		cherrypy.response.cookie[self.cookiename] = token
 		cherrypy.response.cookie[self.cookiename]['expires'] = 0
 			
-		return Result({'success': True})
-	
-	##
-	# Auth: Login
-	##
-	@session
-	def login(self, username, password):
-		
-		users = self.db.select(self.users, self.users.c.username == username)
-		if not len(users):
-			return Result({'success': False, 'ecode': 0, 'message': "Invalid Username"})
-		
-		if(bcrypt.hashpw(password, users[0].password) != users[0].password):
-			return Result({'success': False, 'ecode': 1, 'message': "Invalid Password"})
-		
-		token = self.createSession(users[0].id)
-		
-		return Result({'success': True, 'token': token})
-		
-	##
-	# Register
-	##
-	@session
-	def register(self, username, password, email, first_name, last_name, admin, superadmin):
-		username = username.lower()
-		users = self.db.select(self.users, self.users.c.username == username)
-		if len(users):
-			return Result({'success': False, 'ecode': 0, 'message': "Username already exists"})
-		
-		hashed = bcrypt.hashpw(password, bcrypt.gensalt())
-		
-		self.db.insert(self.users, {'username': username, 'password': hashed, 'email': email, 'first_name': first_name, 'last_name': last_name, 'admin': admin, 'superadmin': superadmin})
-		users = self.db.select(self.users, self.users.c.username == username)
 		return Result({'success': True})
 		

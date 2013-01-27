@@ -8,9 +8,17 @@ CREATE TABLE `user_accounts` (
 	`password` VARCHAR(60) NOT NULL,
 	`first_name` VARCHAR(25) NOT NULL,
 	`last_name` VARCHAR(25) NOT NULL,
+	`active` BOOLEAN NOT NULL DEFAULT FALSE,
 	`admin` BOOLEAN NOT NULL DEFAULT FALSE,
 	`superadmin` BOOLEAN NOT NULL DEFAULT FALSE 
 	
+);
+
+DROP TABLE IF EXISTS `verification_tokens`;
+CREATE TABLE `verification_tokens` (
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`user_id` INT NOT NULL UNIQUE,
+	`token` VARCHAR(48) NOT NULL UNIQUE
 );
 
 DROP TABLE IF EXISTS `user_sessions`;

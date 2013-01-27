@@ -1,8 +1,9 @@
 import cherrypy
 
-from main import STEAM, Admin, handle_error
+from main import STEAM, Account, Admin, handle_error
 
 root = STEAM()
+account = Account()
 admin = Admin()
 
 dispatcher = cherrypy.dispatch.RoutesDispatcher()
@@ -15,10 +16,11 @@ dispatcher.connect('register_page', '/register', root.register_page)
 
 # Auth
 dispatcher.connect('auth_logout', '/auth/logout', root.auth_logout)
+dispatcher.connect('auth_activate', '/auth/activate/:vtoken', root.auth_activate)
 dispatcher.connect('auth_getsession', '/auth/getsession', root.auth_getsession)
 
 # User Account Pages
-#
+dispatcher.connect('user_account', '/user/account', account.user_account)
 
 # Admin Pages
 #

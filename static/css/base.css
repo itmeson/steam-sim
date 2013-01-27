@@ -14,6 +14,35 @@ body {
 /*-- End base.html --*/
 
 
+/*++ base.html ++*/
+
+.messagebox {
+	display: none;
+}
+
+.input-group {
+	width: 100%;
+}
+
+.interest-group {
+	margin-left: 35px;
+}
+
+.input-interest {
+	margin: 0px 3px 0px 0px !important;
+}
+
+.well-input {
+	margin: 0;
+}
+
+.label-input {
+	margin-bottom: 7px;
+}
+
+/*-- End base.html --*/
+
+
 /*++ Bootstrap Custom Labels/Badges ++*/
 
 .label-science, .badge-science {
