@@ -3,6 +3,7 @@ USE steam;
 DROP TABLE IF EXISTS `user_accounts`;
 CREATE TABLE `user_accounts` (
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`profile_id` INT DEFAULT NULL,
 	`username` VARCHAR(25) NOT NULL UNIQUE,
 	`email` VARCHAR(60) NOT NULL UNIQUE,
 	`password` VARCHAR(60) NOT NULL,
@@ -11,7 +12,16 @@ CREATE TABLE `user_accounts` (
 	`active` BOOLEAN NOT NULL DEFAULT FALSE,
 	`admin` BOOLEAN NOT NULL DEFAULT FALSE,
 	`superadmin` BOOLEAN NOT NULL DEFAULT FALSE 
-	
+);
+
+DROP TABLE IF EXISTS `user_profiles`;
+CREATE TABLE `user_profiles` (
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`interest_science` BOOLEAN NOT NULL DEFAULT FALSE,
+	`interest_technology` BOOLEAN NOT NULL DEFAULT FALSE,
+	`interest_engineering` BOOLEAN NOT NULL DEFAULT FALSE,
+	`interest_art` BOOLEAN NOT NULL DEFAULT FALSE,
+	`interest_math` BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 DROP TABLE IF EXISTS `verification_tokens`;

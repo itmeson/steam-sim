@@ -39,7 +39,6 @@ def configure():
 # Convenience function for mako template lookup & rendering
 # handles template lookup, global variables, and encoding automagically
 def tmplr(name, *args, **kwargs):
-	auth.deleteStaleSessions()
 	kwdict = {'ROOT_URL': config['global']['ROOT_URL'], 'authenticated': auth.authenticated(), 'admin': auth.is_admin(), 'session': auth.getSession()}
 	kwdict.update(kwargs)
 	return lookup.get_template(name).render_unicode(**kwdict).encode('utf-8', 'replace')
