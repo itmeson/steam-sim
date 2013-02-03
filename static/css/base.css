@@ -6,15 +6,58 @@ body {
 	padding-bottom: 40px;
 }
 
+.navbar-inner {
+	padding-top: 3px;
+}
+
+.navbar-account .nav, .navbar-account .dropdown-toggle {
+	margin-right: 0px !important;
+	padding-right: 0px !important;
+}
+
+.profilebox {
+	
+}
+
+.profileimagewrap {
+	width: 65px;
+}
+
+.profileimage {
+	display: block;
+	margin: auto;
+	width: 25px;
+}
+
+.profilename, .profilename > span {
+	width: 100%;
+	margin: auto;
+	text-align: center;
+	color: #999999;
+}
+
+.editicon {
+	opacity: 0.0;
+	padding-right: 2px;
+}
+
+#profile-name {
+	font-size: 30px;
+}
+
+.account-tabs > .nav-tabs {
+	margin-right: 0px !important;
+}
+
 .inline-login {
 	float: left;
 	margin-left: 3px;
 }
 
-/*-- End base.html --*/
-
-
-/*++ base.html ++*/
+.formcontent {
+	margin: auto;
+	width: 400px;
+}
 
 .messagebox {
 	display: none;
@@ -38,6 +81,10 @@ body {
 
 .label-input {
 	margin-bottom: 7px;
+}
+
+.maincontain {
+	padding-top: 40px;
 }
 
 /*-- End base.html --*/

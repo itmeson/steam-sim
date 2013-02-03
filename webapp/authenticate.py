@@ -16,7 +16,7 @@ class Result(dict):
 		try:
 			return self.__getitem__(name)
 		except KeyError:
-			return super(DictObj,self).__getattr__(name)
+			return super(Result, self).__getattr__(name)
 
 def session(func):
 	def wrapped(self, *args, **kwargs):
@@ -36,8 +36,6 @@ class AuthHelper(object):
 		self.sessions = self.db.get_table('user_sessions')
 		self._sessions = "user_sessions"
 		self.vtokens = self.db.get_table('verification_tokens')
-		self.perms_problem = self.db.get_table('perms_problem')
-		self.perms_problemset = self.db.get_table('perms_problemset')
 	
 	##
 	# Util: Generate Token

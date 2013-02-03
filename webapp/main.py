@@ -39,7 +39,7 @@ def configure():
 # Convenience function for mako template lookup & rendering
 # handles template lookup, global variables, and encoding automagically
 def tmplr(name, *args, **kwargs):
-	kwdict = {'ROOT_URL': config['global']['ROOT_URL'], 'authenticated': auth.authenticated(), 'admin': auth.is_admin(), 'session': auth.getSession()}
+	kwdict = {'ROOT_URL': config['global']['ROOT_URL'], 'authenticated': auth.authenticated(), 'admin': auth.is_admin(), 'superadmin': auth.is_superadmin(), 'session': auth.getSession()}
 	kwdict.update(kwargs)
 	return lookup.get_template(name).render_unicode(**kwdict).encode('utf-8', 'replace')
 
@@ -62,6 +62,12 @@ class STEAM(object):
 	@cherrypy.expose
 	def index(self):
 		return tmplr("home.html")
+	
+	# Problems Page
+	# /problems
+	@cherrypy.expose
+	def problems(self):
+		return tmplr("problems.html")
 	
 	# Register Page
 	# /register
@@ -113,7 +119,7 @@ class STEAM(object):
 		if not result.success:
 			return tmplr("login.html", success=False, message=result.message, fields=json.dumps({'username': kwargs['username']}))
 		else:
-			return tmplr("user_account.html", initsession=result.token, admin=auth.is_admin(result.token), superadmin=auth.is_superadmin(result.token), session=auth.getSession(result.token))
+			return tmplr("user_account.html", initsession=result.token, authenticated=auth.authenticated(result.token), admin=auth.is_admin(result.token), superadmin=auth.is_superadmin(result.token), session=auth.getSession(result.token))
 	
 	# Activate Page
 	# /auth/activate
@@ -178,8 +184,19 @@ class Account(object):
 	# /user/account
 	@cherrypy.expose
 	def user_account(self):
-		# TODO: Useful stuff
+		if not auth.authenticated():
+			raise cherrypy.HTTPRedirect("/login")
+		
 		return tmplr("user_account.html")
+		
+	
+	# Ajax Edit Profile
+	# /ajax/editprofile
+	@cherrypy.expose
+	def edit_profile(self, **kwargs):
+		if cherrypy.request.method != 'POST':
+			raise cherrypy.HTTPError(404)
+		return json.dumps({'success': True, 'message': "Yep, it worked!"})
 
 class Admin(object):
 	# For any admin views we have

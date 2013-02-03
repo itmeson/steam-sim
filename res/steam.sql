@@ -17,6 +17,9 @@ CREATE TABLE `user_accounts` (
 DROP TABLE IF EXISTS `user_profiles`;
 CREATE TABLE `user_profiles` (
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`user_id` INT NOT NULL,
+	`joined` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`image` TEXT NOT NULL,
 	`interest_science` BOOLEAN NOT NULL DEFAULT FALSE,
 	`interest_technology` BOOLEAN NOT NULL DEFAULT FALSE,
 	`interest_engineering` BOOLEAN NOT NULL DEFAULT FALSE,

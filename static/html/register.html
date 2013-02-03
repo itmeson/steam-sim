@@ -59,57 +59,59 @@
 
 <%block name="content">
 	<div class="row">
-		<div class="span5 offset4">
-			<h2>Register</h2>
-			<hr />
-			<form method="POST" action="/register" id="register_form">
-				<div class="alert messagebox"><button type="button" class="close" data-dismiss="alert">&times;</button><i class="messagebox-icon"></i>&nbsp;</div>
-				<div class="input-group pull-left">
-					<div class="info-group pull-left">
-						<div class="input-prepend">
-							<span class="add-on"><i class="icon-edit"></i></span>
-							<input class="span2" type="text" name="first_name" id="register_fname" placeholder="First Name">
+		<div class="span6 offset3">
+			<div class="formcontent>">
+				<h2>Register</h2>
+				<hr />
+				<form method="POST" action="/register" id="register_form">
+					<div class="alert messagebox"><button type="button" class="close" data-dismiss="alert">&times;</button><i class="messagebox-icon"></i>&nbsp;</div>
+					<div class="input-group pull-left">
+						<div class="info-group pull-left">
+							<div class="input-prepend">
+								<span class="add-on"><i class="icon-edit"></i></span>
+								<input class="span2" type="text" name="first_name" id="register_fname" placeholder="First Name">
+							</div>
+							<div class="input-prepend">
+								<span class="add-on"><i class="icon-edit"></i></span>
+								<input class="span2" type="text" name="last_name" id="register_lname" placeholder="Last Name">
+							</div>
+							<div class="input-prepend">
+								<span class="add-on"><i class="icon-user"></i></span>
+								<input class="span2" type="text" name="username" id="register_username" placeholder="Username">
+							</div>
+							<div class="input-prepend">
+								<span class="add-on"><i class="icon-key"></i></span>
+								<input class="span2" type="password" name="password" id="register_password" placeholder="Password">
+							</div>
+							<div class="input-prepend input-confirm">
+								<span class="add-on"><i class="icon-key"></i></span>
+								<input class="span2" type="password" name="password_confirm" id="register_password_confirm" placeholder="Confirm">
+							</div>
+							<div class="input-prepend">
+								<span class="add-on"><i class="icon-envelope"></i></span>
+								<input class="span2" type="text" name="email" id="register_email" placeholder="Email">
+							</div>
+							<div class="input-prepend input-confirm">
+								<span class="add-on"><i class="icon-envelope"></i></span>
+								<input class="span2" type="text" name="email_confirm" id="register_email_confirm" placeholder="Confirm">
+							</div>
 						</div>
-						<div class="input-prepend">
-							<span class="add-on"><i class="icon-edit"></i></span>
-							<input class="span2" type="text" name="last_name" id="register_lname" placeholder="Last Name">
-						</div>
-						<div class="input-prepend">
-							<span class="add-on"><i class="icon-user"></i></span>
-							<input class="span2" type="text" name="username" id="register_username" placeholder="Username">
-						</div>
-						<div class="input-prepend">
-							<span class="add-on"><i class="icon-key"></i></span>
-							<input class="span2" type="password" name="password" id="register_password" placeholder="Password">
-						</div>
-						<div class="input-prepend input-confirm">
-							<span class="add-on"><i class="icon-key"></i></span>
-							<input class="span2" type="password" name="password_confirm" id="register_password_confirm" placeholder="Confirm">
-						</div>
-						<div class="input-prepend">
-							<span class="add-on"><i class="icon-envelope"></i></span>
-							<input class="span2" type="text" name="email" id="register_email" placeholder="Email">
-						</div>
-						<div class="input-prepend input-confirm">
-							<span class="add-on"><i class="icon-envelope"></i></span>
-							<input class="span2" type="text" name="email_confirm" id="register_email_confirm" placeholder="Confirm">
+						<div class="interest-group pull-left">
+							<h4>I am interested in:</h4>
+							<div class="well well-input">
+								<input type="checkbox" class="input-interest" name="iscience" id="register_iscience" /><span class="label label-science label-input"><i class="icon-beaker"></i> Science</span><br />
+								<input type="checkbox" class="input-interest" name="itechnology" id="register_itechnology" /><span class="label label-technology label-input"><i class="icon-cogs"></i> Technology</span><br />
+								<input type="checkbox" class="input-interest" name="iengineering" id="register_iengineering" /><span class="label label-engineering label-input"><i class="icon-wrench"></i> Engineering</span><br />
+								<input type="checkbox" class="input-interest" name="iart" id="register_iart" /><span class="label label-art label-input"><i class="icon-picture"></i> Art</span><br />
+								<input type="checkbox" class="input-interest" name="imath" id="register_imath" /><span class="label label-math label-input"><i class="icon-bar-chart"></i> Math</span>
+							</div>
 						</div>
 					</div>
-					<div class="interest-group pull-left">
-						<h4>I am interested in:</h4>
-						<div class="well well-input">
-							<input type="checkbox" class="input-interest" name="iscience" id="register_iscience" /><span class="label label-science label-input"><i class="icon-beaker"></i> Science</span><br />
-							<input type="checkbox" class="input-interest" name="itechnology" id="register_itechnology" /><span class="label label-technology label-input"><i class="icon-cogs"></i> Technology</span><br />
-							<input type="checkbox" class="input-interest" name="iengineering" id="register_iengineering" /><span class="label label-engineering label-input"><i class="icon-wrench"></i> Engineering</span><br />
-							<input type="checkbox" class="input-interest" name="iart" id="register_iart" /><span class="label label-art label-input"><i class="icon-picture"></i> Art</span><br />
-							<input type="checkbox" class="input-interest" name="imath" id="register_imath" /><span class="label label-math label-input"><i class="icon-bar-chart"></i> Math</span>
-						</div>
-					</div>
-				</div>
-				<br />
-				<a class="btn btn-info disabled" id="register_submit" href="#">
-				<i class="icon-lock"></i> Register</a>
-			</form>
+					<br />
+					<a class="btn btn-info disabled" id="register_submit" href="#">
+					<i class="icon-lock"></i> Register</a>
+				</form>
+			</div>
 		</div>
 	</div>
 </%block>

@@ -11,6 +11,7 @@
 	<link href="/static/css/jquery.qtip.min.css" rel="stylesheet" type="text/css" />
 	<link href="/static/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
 	<link href="/static/css/bootstrap-responsive.min.css" rel="stylesheet" type="text/css">
+	<link href="/static/css/bootstrap-editable.css" rel="stylesheet" type="text/css">
 	<link href="/static/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 	
 	<%block name="head"></%block>
@@ -42,38 +43,60 @@
 			<ul class="nav">
 				<li class="active"><a href="/">Home</a></li>
 				<li><a href="/about">About</a></li>
-				<li><a href="/contact">Contact</a></li>
-				<li class="dropdown">
-				<a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
-				<ul class="dropdown-menu">
-					<li><a href="#">Action</a></li>
-					<li><a href="#">Long Action</a></li>
-					<li><a href="#">Longer Action</a></li>
-					<li class="divider"></li>
-					<li class="nav-header">Nav header</li>
-					<li><a href="#">Separated link</a></li>
-					<li><a href="#">Another separated link</a></li>
-				</ul>
+				<li><a href="/problems">Problems</a></li>
+				<li>
+					<form class="navbar-search pull-left" action="/search" method="POST">
+						<input type="text" class="search-query" placeholder="Search">
+					</form>
 				</li>
 			</ul>
-			<form class="navbar-form pull-right" id="login_form_inline" method="POST" action="/login">
-				<div class="input-prepend inline-login">
-					<span class="add-on"><i class="icon-user"></i></span>
-					<input class="span2" type="text" name="username" id="login_username_inline" placeholder="Username">
+			% if not authenticated:
+				<form class="navbar-form pull-right" id="login_form_inline" method="POST" action="/login">
+					<div class="input-prepend inline-login">
+						<span class="add-on"><i class="icon-user"></i></span>
+						<input class="span2" type="text" name="username" id="login_username_inline" placeholder="Username">
+					</div>
+					<div class="input-prepend inline-login">
+						<span class="add-on"><i class="icon-key"></i></span>
+						<input class="span2" type="password" name="password" id="login_password_inline" placeholder="Password">
+					</div>
+					<a class="btn btn-info disabled inline-login" id="login_submit_inline" href="#">
+					<i class="icon-lock"></i> Login</a>
+				</form>
+			% else:
+				<div class="navbar-account pull-right">
+					<div class="nav-collapse collapse pull-left">
+						<ul class="nav">
+							<li class="dropdown">
+								<a href="#" class="dropdown-toggle" data-toggle="dropdown">My Account <b class="caret"></b></a>
+								<ul class="dropdown-menu">
+									<li class="nav-header">View</li>
+									<li><a href="/user/account">Profile</a></li>
+									<li><a href="#">Progress</a></li>
+									<li class="divider"></li>
+									<li class="nav-header">Manage</li>
+									<li><a href="#">Preferences</a></li>
+									<li><a href="/auth/logout">Logout</a></li>
+								</ul>
+							</li>
+						</ul>
+					</div>
+					<div class="profilebox pull-left">
+						<div class="profileimagewrap">
+							<img class="profileimage" src="/static/img/default.png" height="25" width="25" />
+						</div>
+						<div class="profilename">
+							<span>${session.first_name} ${session.last_name}</span>
+						</div>
+					</div>
 				</div>
-				<div class="input-prepend inline-login">
-					<span class="add-on"><i class="icon-key"></i></span>
-					<input class="span2" type="password" name="password" id="login_password_inline" placeholder="Password">
-				</div>
-				<a class="btn btn-info disabled inline-login" id="login_submit_inline" href="#">
-				<i class="icon-lock"></i> Login</a>
-			</form>
+			% endif
 			</div>
 		</div>
 		</div>
 	</div>
 
-	<div class="container">
+	<div class="maincontain container">
 		<%block name="content"></%block>
 
 		<hr />
@@ -85,6 +108,7 @@
 	<script src="/static/js/jquery-1.9.0.min.js"></script>
 	<script src="/static/js/jquery-ui-1.10.0.custom.min.js"></script>
 	<script src="/static/js/bootstrap.min.js"></script>
+	<script src="/static/js/bootstrap-editable.min.js"></script>
 	<script src="/static/js/jquery.cookie.min.js"></script>
 	<script src="/static/js/jquery.qtip.min.js"></script>
 	<script src="http://code.jquery.com/jquery-migrate-1.0.0.min.js"></script>
@@ -106,6 +130,18 @@
 				hide: { event: "mouseleave" }
 			});
 			
+			$("input").bind('keypress', function(event){
+				if(event.keyCode == 13) {
+					event.preventDefault();
+					var form = $(this).closest("form");
+					if(!$(form).find(".disabled").length) {
+						$(form).submit();
+					}
+					return false;
+				}
+				
+			});
+			
 			$("#login_form_inline input").keyup(function(){
 				if($("#login_username_inline").val() && $("#login_password_inline").val()) {
 					$("#login_submit_inline").removeClass("disabled");
@@ -121,9 +157,58 @@
 				if(!$(this).hasClass("disabled")) {
 					$("#login_form_inline").submit();
 				}
-		
-		return false;
-	});
+				return false;
+			});
+			
+			//Javascript Error Logging
+			window.errorlist = Array();
+			window.onerror = function(msg, script, line) {
+				window.errorlist.push();
+				$.post("/ajax/jslog", { href: window.location.href, msg: msg, script: script, line: line });
+			}
+			
+			window.getsession = function() {
+				$.ajax({
+					type: 'POST',
+					url: '/auth/getsession',
+					dataType: 'json'
+				}).done(function(data) {
+					console.log(data);
+					if(data.success) {
+						window.user = data;
+						$.cookie('steam_token', data.token, { expires: 1, path: '/' });
+					} else {
+						$.removeCookie('steam_token');
+					}
+				}).fail(function(){
+					$.removeCookie('steam_token');
+				});
+			}
+			
+			window.heartbeat = function() {
+				$.ajax({
+					type: 'POST',
+					url: '/auth/heartbeat',
+					dataType: 'json',
+					data: {
+						action: 'heartbeat',
+						token: $.cookie('steam_token')
+					}
+				}).done(function(data) {
+					if(data.success) {
+						console.log("Heartbeat - Success");
+					} else {
+						console.log("Heartbeat - Failed");
+					}
+				}).fail(function(){
+					console.log("Heartbeat - Failed");
+				});
+			}
+			
+			if($.cookie('steam_token'))
+			{
+				window.getsession();
+			}
 			
 			//child template js
 			<%block name="scripts"></%block>

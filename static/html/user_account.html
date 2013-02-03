@@ -1,0 +1,74 @@
+<%inherit file="base.html"/>
+
+<%block name="title">Account | STEAM</%block>
+
+<%block name="head">
+
+</%block>
+
+<%block name="scripts">
+	% if initsession:
+		$.cookie('steam_token', "${initsession}", { expires: 1, path: '/' });
+		window.getsession();
+	% endif
+	
+	$("#profile-name").editable({
+		placement: 'right',
+		url: '/ajax/editprofile',
+		send: 'always',
+		success: function(response, newValue) {
+			if(response.success) {
+				return {newValue: newValue}
+			} else {
+				return response.message;
+			}
+		}
+	});
+	
+	$(".infoblock span").hover(
+		function(event){
+			$(this).find(".editicon").fadeTo("fast", 1.0);
+		},
+		function(event){
+			$(this).find(".editicon").fadeTo("fast", 0.0);
+		}
+	);
+	
+	$('.fileupload').fileupload();
+</%block>
+
+<%block name="content">
+	<div class="row">
+		<div class="span12">
+			<div class="account-tabs tabbable tabbable-bordered tabs-left">
+				<ul class="nav nav-tabs">
+					<li class="active"><a href="#profile" data-toggle="tab">Profile</a></li>
+					<li><a href="#progress" data-toggle="tab">Progress</a></li>
+					<li><a href="#preferences" data-toggle="tab">Preferences</a></li>
+				</ul>
+				<div class="tab-content">
+					<div class="tab-pane active" id="profile">
+						<div class="profilecontent">
+							<div class="infoblock well well-small">
+								<span><i class="editicon icon-pencil"></i><a href="#" id="profile-name" data-type="text" data-original-title="What is your name?">${session.first_name} ${session.last_name}</a></span>
+							</div>
+							
+							<div class="fileupload fileupload-new" data-provides="fileupload">
+								<div class="fileupload-new thumbnail" style="width: 50px; height: 50px;"><img src="/static/img/default.png" /></div>
+								<div class="fileupload-preview fileupload-exists thumbnail" style="width: 50px; height: 50px;"></div>
+								<span class="btn btn-file"><span class="fileupload-new">Select image</span><span class="fileupload-exists">Change</span><input type="file" /></span>
+								<a href="#" class="btn fileupload-exists" data-dismiss="fileupload">Remove</a>
+							</div>
+						</div>
+					</div>
+					<div class="tab-pane" id="progress">
+						<p>Progress!</p><br /><br /><br /><br /><br />
+					</div>
+					<div class="tab-pane" id="preferences">
+						<p>Preferences!</p><br /><br /><br /><br /><br />
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</%block>
