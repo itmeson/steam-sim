@@ -6,6 +6,7 @@ from mako.lookup import TemplateLookup
 from authenticate import AuthHelper
 from database import Database
 from emailer import Emailer
+from profilemanager import ProfileManager
 from utils import timestamp
 
 # PLaceholders for our helpers
@@ -14,12 +15,13 @@ lookup = None
 db = None
 auth = None
 emailer = None
+profile = None
 
 # Called by /index.py
 # Performs initial setup after helpers are injected into this module
 # Necessary to later avoid circular imports
 def configure(): 
-	global lookup, db, auth, logger, emailer
+	global lookup, db, auth, logger, emailer, profile
 	
 	# Copy default logger
 	logger = cherrypy.log
@@ -35,11 +37,15 @@ def configure():
 	
 	# Initialize AuthHelper
 	auth = AuthHelper(db)
+	
+	# Initialize Profile Manager
+	profile = ProfileManager(db, auth, config['profilemanager']['imagepath'], config['profilemanager']['imageurl'])
 
 # Convenience function for mako template lookup & rendering
 # handles template lookup, global variables, and encoding automagically
 def tmplr(name, *args, **kwargs):
-	kwdict = {'ROOT_URL': config['global']['ROOT_URL'], 'authenticated': auth.authenticated(), 'admin': auth.is_admin(), 'superadmin': auth.is_superadmin(), 'session': auth.getSession()}
+	session = auth.getSession()
+	kwdict = {'ROOT_URL': config['global']['ROOT_URL'], 'authenticated': auth.authenticated(), 'admin': auth.is_admin(), 'superadmin': auth.is_superadmin(), 'session': session, 'profile': profile.getProfile(session.user_id) if session.success else None}
 	kwdict.update(kwargs)
 	return lookup.get_template(name).render_unicode(**kwdict).encode('utf-8', 'replace')
 
@@ -96,6 +102,15 @@ class STEAM(object):
 		if not result.success:
 			return tmplr("register.html", success=False, message=result.message, fields=json.dumps(kwargs))
 		
+		profile.createProfile(result.user_id,
+								profile.imageurl + "default.png",
+								science=True if 'science' in kwargs else False,
+								technology=True if 'technology' in kwargs else False,
+								engineering=True if 'engineering' in kwargs else False,
+								art=True if 'art' in kwargs else False,
+								math=True if 'math' in kwargs else False
+							)
+		
 		emailer.send("STEAM Club", "%s %s" % (result.first_name, result.last_name), "steam@wilhall.com", result.email, "Activate Your Account", "Visit the following link to activate your account: http://steam.wilhall.com/auth/activate/%s" % result.vtoken)
 		
 		return tmplr("register.html", success=True, message="Thank you for registering! We will be sending you a confirmation email shortly.")
@@ -119,7 +134,8 @@ class STEAM(object):
 		if not result.success:
 			return tmplr("login.html", success=False, message=result.message, fields=json.dumps({'username': kwargs['username']}))
 		else:
-			return tmplr("user_account.html", initsession=result.token, authenticated=auth.authenticated(result.token), admin=auth.is_admin(result.token), superadmin=auth.is_superadmin(result.token), session=auth.getSession(result.token))
+			session = auth.getSession(result.token)
+			return tmplr("user_account.html", initsession=result.token, authenticated=auth.authenticated(result.token), admin=auth.is_admin(result.token), superadmin=auth.is_superadmin(result.token), session=session, profile=profile.getProfile(session.user_id) if session.success else None)
 	
 	# Activate Page
 	# /auth/activate
@@ -149,8 +165,9 @@ class STEAM(object):
 		aresult = auth.activate(kwargs['vtoken'])
 		if not aresult.success:
 			return tmplr("auth_activate.html", vtoken=kwargs['vtoken'], success=False, message=kresult.message, fields=json.dumps({'username': kwargs['username']}))
-			
-		return tmplr("user_account.html", initsession=lresult.token, admin=auth.is_admin(lresult.token), superadmin=auth.is_superadmin(lresult.token), session=auth.getSession(lresult.token))
+		
+		session = auth.getSession(lresult.token)
+		return tmplr("user_account.html", initsession=lresult.token, authenticated=auth.authenticated(lresult.token), admin=auth.is_admin(lresult.token), superadmin=auth.is_superadmin(lresult.token), session=session, profile=profile.getProfile(session.user_id) if session.success else None)
 	
 	# Auth: Logout
 	# /auth/logout

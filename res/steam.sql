@@ -17,7 +17,7 @@ CREATE TABLE `user_accounts` (
 DROP TABLE IF EXISTS `user_profiles`;
 CREATE TABLE `user_profiles` (
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-	`user_id` INT NOT NULL,
+	`user_id` INT NOT NULL UNIQUE,
 	`joined` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`image` TEXT NOT NULL,
 	`interest_science` BOOLEAN NOT NULL DEFAULT FALSE,
@@ -36,9 +36,8 @@ CREATE TABLE `verification_tokens` (
 
 DROP TABLE IF EXISTS `user_sessions`;
 CREATE TABLE `user_sessions` (
-	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`token` VARCHAR(12) NOT NULL PRIMARY KEY,
 	`user_id` INT NOT NULL UNIQUE,
-	`token` VARCHAR(12) NOT NULL UNIQUE,
 	`lastupdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

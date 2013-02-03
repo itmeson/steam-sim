@@ -218,7 +218,7 @@ class AuthHelper(object):
 		
 		vtoken = self.createVerificationToken(users[0].id)
 		
-		return Result({'success': True, 'vtoken': vtoken, 'first_name': users[0].first_name, 'last_name': users[0].last_name, 'email': users[0].email})
+		return Result({'success': True, 'vtoken': vtoken, 'user_id': users[0].id, 'first_name': users[0].first_name, 'last_name': users[0].last_name, 'email': users[0].email})
 	
 	##
 	# Auth: Activate
@@ -237,7 +237,7 @@ class AuthHelper(object):
 		
 		self.db.delete(self.vtokens, self.vtokens.c.token == vtoken)
 		
-		return Result({'success': True})
+		return Result({'success': True, 'user_id': users[0].id})
 		
 	##
 	# Auth: Logout

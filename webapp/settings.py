@@ -30,6 +30,10 @@ config = {
 		'sender': "STEAM Club",
 		'from': "steam@wilhall.com"
 	},
+	'profilemanager': {
+		'imagepath': ROOT_URL + "static/upload/profiles/",
+		'imageurl': "/static/upload/profiles/"
+	},
 	'mako': {
 		'MAKO_DIRECTORIES': [ROOT_URL + "static/html/"]
 	}
