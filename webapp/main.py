@@ -213,7 +213,13 @@ class Account(object):
 	def edit_profile(self, **kwargs):
 		if cherrypy.request.method != 'POST':
 			raise cherrypy.HTTPError(404)
-		return json.dumps({'success': True, 'message': "Yep, it worked!"})
+		
+		if not all(k in kwargs for k in ('pk', 'name', 'value')):
+			return json.dumps({'success': False})
+		
+		result = profile.updateProfile(kwargs)
+			
+		return json.dumps(result)
 
 class Admin(object):
 	# For any admin views we have

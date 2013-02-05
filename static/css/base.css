@@ -15,38 +15,12 @@ body {
 	padding-right: 0px !important;
 }
 
-.profilebox {
-	
+#login_username_inline, #login_password_inline {
+	width: 100px;
 }
 
-.profileimagewrap {
-	width: 65px;
-}
-
-.profileimage {
-	display: block;
-	margin: auto;
-	width: 25px;
-}
-
-.profilename, .profilename > span {
-	width: 100%;
-	margin: auto;
-	text-align: center;
-	color: #999999;
-}
-
-.editicon {
-	opacity: 0.0;
-	padding-right: 2px;
-}
-
-#profile-name {
-	font-size: 30px;
-}
-
-.account-tabs > .nav-tabs {
-	margin-right: 0px !important;
+.search-query {
+	width: 150px;
 }
 
 .inline-login {
@@ -90,29 +64,140 @@ body {
 /*-- End base.html --*/
 
 
-/*++ Bootstrap Custom Labels/Badges ++*/
+/*++ user_cpanel.html ++*/
 
-.label-science, .badge-science {
+.profilebox {
+	
+}
+
+.profileimagewrap {
+	width: 65px;
+}
+
+.profileimage {
+	display: block;
+	margin: auto;
+	width: 25px;
+}
+
+.profilename, .profilename > span {
+	width: 100%;
+	margin: auto;
+	text-align: center;
+	color: #999999;
+}
+
+.editicon-left {
+	opacity: 0.0;
+	margin-right: 2px;
+}
+
+.editicon-right {
+	opacity: 0.0;
+	margin-left: 2px;
+}
+
+#first_name, #last_name {
+	font-size: 42px;
+}
+
+.info-image {
+	width: 70px;
+	height: 130px;
+	float: left;
+}
+
+.info-name {
+	float: left;
+	padding-top: 20px;
+}
+
+.infoblock {
+	float: left;
+	width: 98%;
+}
+
+.fileupload {
+	width: 70px;
+}
+
+.fileupload-new.thumbnail {
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.fileupload-new > .fileupload-new.thumbnail {
+	display: block;
+}
+
+.fileupload-preview.thumbnail {
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.fileupload-exists > .fileupload-preview.thumbnail {
+	display: block;
+}
+
+.progress-wrapper {
+	font-size: 40px;
+}
+
+.progress-icon {
+	float: left;
+	width: 50px !important;
+	text-align: right;
+}
+
+.progress-text {
+	float: left;
+	width: 125px;
+	font-size: 20px;
+	text-align: left;
+	margin-top: 10px;
+	margin-left: 5px;
+}
+
+.bar {
+	text-align: center;
+	font-weight: bolder;
+	width: 3% !important;
+}
+
+.bar-wrapper {
+	padding-top: 10px;
+}
+
+.account-tabs > .nav-tabs {
+	margin-right: 0px !important;
+}
+
+/*-- End user_account.html --*/
+
+
+/*++ Bootstrap Custom ++*/
+
+.label-science, .badge-science, .bar-science {
 	background-color: #468847 !important;
 }
 
-.label-technology, .badge-technology {
+.label-technology, .badge-technology, .bar-technology {
 	background-color: #3a87ad !important;
 }
 
-.label-engineering, .badge-engineering {
+.label-engineering, .badge-engineering, .bar-engineering {
 	background-color: #f89406 !important;
 }
 
-.label-art, .badge-art {
+.label-art, .badge-art, .bar-art {
 	background-color: #7a00cc !important;
 }
 
-.label-math, .badge-math {
+.label-math, .badge-math, .bar-math {
 	background-color: #b94a48 !important;
 }
 
-/*-- End Bootstrap Custom Labels/Badges --*/
+/*-- End Bootstrap Custom --*/
 
 
 /*++ QTip2 ++*/

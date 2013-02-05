@@ -28,14 +28,14 @@ class ProfileManager(object):
 		self.perms_problemset = self.db.get_table('perms_problemset')
 		
 		self.editable_attrs = {
-			'first_name': {'table': self.users, 'column': 'first_name'},
-			'last_name': {'table': self.users, 'column': 'last_name'},
-			'image': {'table': self.profiles, 'column': 'image'},
-			'science': {'table': self.profiles, 'column': 'interest_science'},
-			'technology': {'table': self.profiles, 'column': 'interest_technology'},
-			'engineering': {'table': self.profiles, 'column': 'interest_engineering'},
-			'art': {'table': self.profiles, 'column': 'interest_art'},
-			'math': {'table': self.profiles, 'column': 'interest_math'}
+			'first_name': {'table': 'users', 'column': 'first_name'},
+			'last_name': {'table': 'users', 'column': 'last_name'},
+			'image': {'table': 'profiles', 'column': 'image'},
+			'science': {'table': 'profiles', 'column': 'interest_science'},
+			'technology': {'table': 'profiles', 'column': 'interest_technology'},
+			'engineering': {'table': 'profiles', 'column': 'interest_engineering'},
+			'art': {'table': 'profiles', 'column': 'interest_art'},
+			'math': {'table': 'profiles', 'column': 'interest_math'}
 		}
 	
 	# Util: Get User Account
@@ -54,7 +54,7 @@ class ProfileManager(object):
 		users = self.db.select(self.users, self.users.c.id == user_id)
 		if not len(users):
 			return Result({'success': False, 'ecode': 0, 'message': "User does not exist"})
-		return Result({'success': true,
+		return Result({'success': True,
 						'user_id': users[0].id,
 						'username': users[0].username,
 						'email': users[0].email,
@@ -138,22 +138,25 @@ class ProfileManager(object):
 		return Result({'success': True})
 	
 	# Updates an existing user profile
-	def updateProfile(self, user_id=None, token=None, **kwargs):
-		user = self.getUser(user_id=user_id, token=token)
+	def updateProfile(self, attrs):
+		user = self.getUser(user_id=attrs['pk'])
 		
 		if not user.success:
 			return user
 		
-		if 'image' in kwargs:
-			imagepath = self.saveImage(kwargs['image'])
-			self.db.update(self.users, {'image': kwargs['image'].filename}, self.users.c.id == user.user_id)
-			del kwargs['image']
+		# TODO: Fix this
+		if attrs['name'] == 'image':
+			imagepath = self.saveImage(attrs['image'])
+			self.db.update(self.users, {'image': attrs['image'].filename}, self.users.c.id == user.user_id)
+			del attrs['image']
 		
-		account_attrs = {k: v for k, v in kwargs.iteritems() if k in self.editable_attrs and self.editable_attrs[k]['table'] == self.users}
-		profile_attrs = {k: v for k, v in kwargs.iteritems() if k in self.editable_attrs and self.editable_attrs[k]['table'] == self.profiles}
+		if attrs['name'] in self.editable_attrs:
+			if self.editable_attrs[attrs['name']]['table'] == "users":
+				self.db.update(self.users, {self.editable_attrs[attrs['name']]['column']: attrs['value']}, self.users.c.id == user.user_id)
+			elif self.editable_attrs[attrs['name']]['table'] == "profiles":
+				self.db.update(self.profiles, {self.editable_attrs[attrs['name']]['column']: attrs['value']}, self.profiles.c.id == user.user_id)
 		
-		self.db.update(self.users, account_attrs, self.users.c.id == user.user_id)
-		self.db.update(self.profiles, profile_attrs, self.profiles.c.user_id == user.user_id)
+		return Result({'success': True})
 		
 	
 	

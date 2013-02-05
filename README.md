@@ -11,4 +11,5 @@ This website runs with [Python 2.6/2.7](http://www.python.org/) on the [CherryPy
 
  * [mako](http://www.makotemplates.org/)
  * [SQLAlchemy](http://www.sqlalchemy.org/)
+ * [PIL](http://www.pythonware.com/products/pil/)
  * Probably [Pygments](http://pygments.org/) in the near future
