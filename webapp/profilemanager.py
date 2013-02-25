@@ -1,17 +1,7 @@
 import Image
+from StringIO import StringIO
 
-# Dictionary that allows for use of .attribute syntax
-class Result(dict):
-	def __init__(self, d=None):
-		if d:
-			for k, v in d.iteritems():
-				self[k] = v
-	
-	def __getattr__(self, name):
-		try:
-			return self.__getitem__(name)
-		except KeyError:
-			return super(Result, self).__getattr__(name)
+from utils import DictObj as Result
 
 class ProfileManager(object):
 	
@@ -24,8 +14,6 @@ class ProfileManager(object):
 		self.users = self.db.get_table('user_accounts')
 		self.sessions = self.db.get_table('user_sessions')
 		self.profiles = self.db.get_table('user_profiles')
-		self.perms_problem = self.db.get_table('perms_problem')
-		self.perms_problemset = self.db.get_table('perms_problemset')
 		
 		self.editable_attrs = {
 			'first_name': {'table': 'users', 'column': 'first_name'},
@@ -95,6 +83,7 @@ class ProfileManager(object):
 	# Util: Save Profile Image
 	def saveImage(self, image, user_id=None, token=None):
 		user = self.getUser(user_id=user_id, token=token)
+		
 		if not user.success:
 			return user
 		
@@ -103,7 +92,7 @@ class ProfileManager(object):
 			image = image.resize((100, 100), Image.ANTIALIAS)
 			image.save("%s%s.png" % (self.imagepath, user.username), "png")
 			return Result({'success': True})
-		except:
+		except Exception:
 			return Result({'success': False, 'ecode': 2, 'message': "Error opening image file"})
 		
 	# Creates a new user profile
@@ -137,18 +126,26 @@ class ProfileManager(object):
 		
 		return Result({'success': True})
 	
+	# Updates the profile image
+	def updateImage(self, attrs):
+		user = self.getUser(user_id=attrs['pk'])
+		if not user.success:
+			return user
+		
+		result = self.saveImage(attrs['image'], user_id=user.user_id)
+		
+		if not result.success:
+			return result
+		
+		self.db.update(self.profiles, {'image': "%s%s.png" % (self.imageurl, user.username)}, self.profiles.c.user_id == user.user_id)
+		return Result({'success': True})
+	
 	# Updates an existing user profile
 	def updateProfile(self, attrs):
 		user = self.getUser(user_id=attrs['pk'])
 		
 		if not user.success:
 			return user
-		
-		# TODO: Fix this
-		if attrs['name'] == 'image':
-			imagepath = self.saveImage(attrs['image'])
-			self.db.update(self.users, {'image': attrs['image'].filename}, self.users.c.id == user.user_id)
-			del attrs['image']
 		
 		if attrs['name'] in self.editable_attrs:
 			if self.editable_attrs[attrs['name']]['table'] == "users":

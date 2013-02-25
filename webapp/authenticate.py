@@ -5,18 +5,7 @@ import bcrypt
 import json
 import cherrypy
 
-# Dictionary that allows for use of .attribute syntax
-class Result(dict):
-	def __init__(self, d=None):
-		if d:
-			for k, v in d.iteritems():
-				self[k] = v
-	
-	def __getattr__(self, name):
-		try:
-			return self.__getitem__(name)
-		except KeyError:
-			return super(Result, self).__getattr__(name)
+from utils import DictObj as Result
 
 def session(func):
 	def wrapped(self, *args, **kwargs):

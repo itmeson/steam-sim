@@ -36,6 +36,14 @@
 		}
 	);
 	
+	$(".fileupload-save").click(function(event){
+		event.preventDefault();
+		
+		$(this).closest('form').submit();
+		
+		return false;
+	});
+	
 	$('.fileupload').fileupload();
 </%block>
 
@@ -53,18 +61,19 @@
 						<div class="profilecontent">
 							<div class="infoblock well well-small">
 								<div class="info-image">
-									<form action="/ajax/editprofile" method="POST">
+									<form action="/ajax/editimage" method="POST" enctype="multipart/form-data">
+										<input type="hidden" name="pk" value="${session.user_id}" />
 										<div class="fileupload fileupload-new" data-provides="fileupload">
 											<div class="fileupload-new thumbnail" style="width: 50px; height: 50px;">
-												<img src="http://www.placehold.it/50x50/EFEFEF/AAAAAA" />
+												<img src="${profile.image}" />
 											</div>
 											<div class="fileupload-preview fileupload-exists thumbnail" style="width: 50px; height: 50px;"></div>
-											<span class="btn btn-file">
+											<span class="btn btn-small btn-file">
 												<span class="fileupload-new">Choose</span>
 												<span class="fileupload-exists">Change</span>
 												<input name="image" type="file" />
 											</span>
-											<a href="#" class="btn fileupload-exists" data-dismiss="fileupload">Remove</a>
+											<a href="#" class="btn btn-small fileupload-exists fileupload-save">Save</a>
 										</div>
 									</form>
 								</div>

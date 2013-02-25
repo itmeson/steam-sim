@@ -7,21 +7,23 @@ from authenticate import AuthHelper
 from database import Database
 from emailer import Emailer
 from profilemanager import ProfileManager
+from problemmanager import ProblemManager
 from utils import timestamp
 
-# PLaceholders for our helpers
+# Placeholders for our helpers
 logger = None
 lookup = None
 db = None
 auth = None
 emailer = None
 profile = None
+problems = None
 
 # Called by /index.py
 # Performs initial setup after helpers are injected into this module
 # Necessary to later avoid circular imports
 def configure(): 
-	global lookup, db, auth, logger, emailer, profile
+	global lookup, db, auth, logger, emailer, profile, problems
 	
 	# Copy default logger
 	logger = cherrypy.log
@@ -40,6 +42,9 @@ def configure():
 	
 	# Initialize Profile Manager
 	profile = ProfileManager(db, auth, config['profilemanager']['imagepath'], config['profilemanager']['imageurl'])
+	
+	# Initialize Problem Manager
+	problems = ProblemManager(db, auth, profile)
 
 # Convenience function for mako template lookup & rendering
 # handles template lookup, global variables, and encoding automagically
@@ -59,7 +64,6 @@ def handle_error(status, message, traceback, version):
 	else:
 		# TODO: Determine what kind of error!
 		return str(tmplr("404.html", test1="<h2>404<h2>", test2="<br />File Not Found<br /><pre>%s</pre>" % str(traceback)))
-
 
 class STEAM(object):
 	
@@ -103,7 +107,7 @@ class STEAM(object):
 			return tmplr("register.html", success=False, message=result.message, fields=json.dumps(kwargs))
 		
 		profile.createProfile(result.user_id,
-								profile.imageurl + "default.png",
+								"/static/img/default.png",
 								science=True if 'science' in kwargs else False,
 								technology=True if 'technology' in kwargs else False,
 								engineering=True if 'engineering' in kwargs else False,
@@ -220,6 +224,26 @@ class Account(object):
 		result = profile.updateProfile(kwargs)
 			
 		return json.dumps(result)
+
+	# Ajax Edit Image
+	# /ajax/editimage
+	@cherrypy.expose
+	def edit_image(self, **kwargs):
+		if cherrypy.request.method != 'POST':
+			#raise cherrypy.HTTPError(404)
+			return "!11"
+		
+		if not all(k in kwargs for k in ('pk', 'image')):
+			#raise cherrypy.HTTPError(404)
+			return "1"
+		
+		result = profile.updateImage(kwargs)
+		
+		if not result.success:
+			#raise cherrypy.HTTPError(404)
+			return str(result)
+			
+		raise cherrypy.HTTPRedirect("/user/account")
 
 class Admin(object):
 	# For any admin views we have

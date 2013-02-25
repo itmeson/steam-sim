@@ -24,6 +24,7 @@ dispatcher.connect('auth_getsession', '/auth/getsession', root.auth_getsession)
 # User Account Pages
 dispatcher.connect('user_account', '/user/account', account.user_account)
 dispatcher.connect('edit_profile', '/ajax/editprofile', account.edit_profile)
+dispatcher.connect('edit_image', '/ajax/editimage', account.edit_image)
 
 # Admin Pages
 #
