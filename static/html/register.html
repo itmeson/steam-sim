@@ -7,54 +7,59 @@
 </%block>
 
 <%block name="scripts">
-	
-	% if not success:
-		var fields = ${fields};
+<script type="text/javascript">
+	$(document).ready(function(){
+		$(".navregister").addClass('active');
 		
-		for(var k in fields) {
-			if(fields[k] == "on") {
-				$(".interest-group input[name='" + k + "']").attr('checked', 'checked');
-			} else {
-				$(".info-group input[name='" + k + "']").val(fields[k]);
-			}
-		}
-		
-		$(".messagebox-icon").addClass("icon-warning-sign");
-		$(".messagebox").addClass("alert-error").append("${message}").fadeIn();
-	% else:
-		% if message:
-			$(".messagebox-icon").addClass("icon-ok-sign");
-			$(".messagebox").addClass("alert-success").append("${message}").fadeIn();
+		% if not success:
+			var fields = ${fields};
 			
+			for(var k in fields) {
+				if(fields[k] == "on") {
+					$(".interest-group input[name='" + k + "']").attr('checked', 'checked');
+				} else {
+					$(".info-group input[name='" + k + "']").val(fields[k]);
+				}
+			}
+			
+			$(".messagebox-icon").addClass("icon-warning-sign");
+			$(".messagebox").addClass("alert-error").append("${message}").fadeIn();
+		% else:
+			% if message:
+				$(".messagebox-icon").addClass("icon-ok-sign");
+				$(".messagebox").addClass("alert-success").append("${message}").fadeIn();
+				
+			% endif
 		% endif
-	% endif
-	
-	$("#register_form input").keyup(function(){
-		var complete = true;
-		$(".info-group input").each(function(){
-			if(!$(this).val()) {
-				complete = false;
-				return false;
+		
+		$("#register_form input").keyup(function(){
+			var complete = true;
+			$(".info-group input").each(function(){
+				if(!$(this).val()) {
+					complete = false;
+					return false;
+				}
+			});
+			
+			if(complete) {
+				$("#register_submit").removeClass("disabled");
+			} else {
+				$("#register_submit").addClass("disabled");
 			}
 		});
 		
-		if(complete) {
-			$("#register_submit").removeClass("disabled");
-		} else {
-			$("#register_submit").addClass("disabled");
-		}
+		$("#register_submit").click(function(event){
+			event.preventDefault();
+			event.stopPropagation();
+			
+			if(!$(this).hasClass("disabled")) {
+				$("#register_form").submit();
+			}
+			
+			return false;
+		});
 	});
-	
-	$("#register_submit").click(function(event){
-		event.preventDefault();
-		event.stopPropagation();
-		
-		if(!$(this).hasClass("disabled")) {
-			$("#register_form").submit();
-		}
-		
-		return false;
-	});
+</script>
 </%block>
 
 <%block name="content">

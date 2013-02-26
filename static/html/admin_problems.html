@@ -1,0 +1,228 @@
+<%inherit file="base.html"/>
+
+<%block name="title">Admin - Problems | STEAM</%block>
+
+<%block name="head">
+
+</%block>
+
+<%block name="scripts">
+<script type="text/javascript">
+	$(document).ready(function(){
+		$(".navadmin").addClass('active');
+		
+		% if category:
+			$("#${category}, .${category}").addClass("active");
+		% else:
+			if(window.location.hash != "") {
+				var id = window.location.hash.substr(1);
+				$(["#", id, ", .", id].join('')).addClass("active");
+			} else {
+				$("#problems, .problems").addClass("active");
+			}
+		% endif
+		
+		$(".tablink").click(function(){
+			window.location.hash = $(this).attr("href");
+		});
+		
+		$(".deletebtn").click(function(){
+			var row = $(this).closest("tr");
+			var id = $(row).attr("data-id");
+			var btn = this;
+			$(btn).button('loading');
+			
+			$.ajax({
+				url: "/ajax/problems",
+				method: "POST",
+				data: {
+					action: "delete",
+					atype: $(row).parent().attr('data-atype'),
+					id: id
+				}
+			}).done(function(data) {
+				$(row).fadeOut(function(){
+					$(row).remove();
+				});
+			}).fail(function(){
+				$(btn).button('reset');
+			});
+		});
+	});
+</script>
+</%block>
+
+<%block name="content">
+	<div class="row">
+		<div class="span12">
+			<div class="tabbable tabbable-bordered">
+				<ul class="nav nav-tabs">
+					<li class="problems"><a class="tablink" href="#problems" data-toggle="tab">
+						<span class="label">Problems</span>
+					</a></li>
+					<li class="problemurls"><a class="tablink" href="#problemurls" data-toggle="tab">
+						<span class="label">Problem URLs</span>
+					</a></li>
+					<li class="problemsetlinks"><a class="tablink" href="#problemsetlinks" data-toggle="tab">
+						<span class="label">ProblemSet Links</span>
+					</a></li>
+				</ul>
+				<div class="tab-content">
+					
+					<!-- Problem Pane -->
+					<div class="tab-pane" id="problems">
+						<form class="form-inline span12 offset1" method="POST" action="/ajax/problems">
+							<input type="hidden" name="action" value="create" />
+							<input type="hidden" name="atype" value="problem" />
+							<input type="text" class="input-small" name="name" placeholder="Name" />
+							<input type="text" class="input-small" name="slug" placeholder="Slug" />
+							<select class="input-medium" name="type">
+								<option selected="selected" disabled="disabled" value="0"> --- Select Type ---</option>
+								<option value="0">Science</option>
+								<option value="1">Technology</option>
+								<option value="2">Engineering</option>
+								<option value="3">Art</option>
+								<option value="4">Math</option>
+							</select>
+							<textarea class="input-medium" name="desc" placeholder="Description"></textarea>
+							<textarea class="input-medium" name="background" placeholder="Background"></textarea>
+							<select class="input-medium" name="handler">
+								<option selected="selected" disabled="disabled" value="0"> --- Select Handler ---</option>
+								% for handler in handlers:
+								<option value="${handler}">${handler}</option>
+								% endfor
+							</select>
+							<button type="submit" class="btn">Create</button>
+						</form>
+						<table class="table table-condensed table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<th>Problem ID</th>
+									<th>Name</th>
+									<th>Slug</th>
+									<th>Type</th>
+									<th>Desc</th>
+									<th>Background</th>
+									<th>Creator</th>
+									<th>Handler</th>
+									<th></th>
+								</tr>
+							</thead>
+							<tbody data-atype="problem">
+								% for problem in problems:
+								<tr class="probrow" data-id="${problem.problem_id}">
+									<td class="probrow-id">${problem.problem_id}</td>
+									<td class="probrow-name">${problem.name}</td>
+									<td class="probrow-slug">${problem.slug}</td>
+									<td class="probrow-type">
+										% if problem.type == 0:
+											<span class="label label-science"><i class="icon-beaker"></i> Science</span>
+										% elif problem.type == 1:
+											<span class="label label-technology"><i class="icon-cogs"></i> Technology</span>
+										% elif problem.type == 2:
+											<span class="label label-engineering"><i class="icon-wrench"></i> Engineering</span>
+										% elif problem.type == 3:
+											<span class="label label-art"><i class="icon-picture"></i> Art</span>
+										% else:
+											<span class="label label-math"><i class="icon-bar-chart"></i> Math</span>
+										% endif
+									</td>
+									<td class="probrow-desc">${problem.desc}</td>
+									<td class="probrow-background">${problem.background}</td>
+									<td class="probrow-creator">${problem.creator.first_name} ${problem.creator.last_name}</td>
+									<td class="probrow-handler">${problem.handler}</td>
+									<td class="probrow-delete">
+										<button type="button" data-loading-text="Deleting..." class="deletebtn btn btn-danger">Delete</button>
+									</td>
+								</tr>
+								% endfor
+							</tbody>
+						</table>
+					</div>
+					
+					<!-- URL Pane -->
+					<div class="tab-pane" id="problemurls">
+						<form class="form-inline span12 offset1" method="POST" action="/ajax/problems">
+							<input type="hidden" name="action" value="create" />
+							<input type="hidden" name="atype" value="url" />
+							<select class="input-medium" name="handler">
+								<option selected="selected" disabled="disabled" value="0"> --- Select Problem ---</option>
+								% for problem in problems:
+								<option value="${problem.problem_id}">${problem.name}</option>
+								% endfor
+							</select>
+							<input type="text" class="input-small" name="url" placeholder="URL" />
+							<button type="submit" class="btn">Create</button>
+						</form>
+						<table class="table table-condensed table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<th>URL ID</th>
+									<th>Problem ID</th>
+									<th>Url</th>
+									<th></th>
+								</tr>
+							</thead>
+							<tbody data-atype="url">
+								% for url in urls:
+								<tr class="urlrow" data-id="${url.url_id}">
+									<td class="urlrow-id">${url.url_id}</td>
+									<td class="urlrow-probid">${url.problem_id}</td>
+									<td class="urlrow-url">${url.url}</td>
+									<td class="urlrow-delete">
+										<button type="button" data-loading-text="Deleting..." class="deletebtn btn btn-danger">Delete</button>
+									</td>
+								</tr>
+								% endfor
+							</tbody>
+						</table>
+					</div>
+					
+					<!-- Link Pane -->
+					<div class="tab-pane" id="problemsetlinks">
+						<form class="form-inline span12 offset1" method="POST" action="/ajax/problems">
+							<input type="hidden" name="action" value="create" />
+							<input type="hidden" name="atype" value="link" />
+							<select class="input-medium" name="set_id">
+								<option selected="selected" disabled="disabled" value="0"> --- Select Problem Set ---</option>
+								% for set in sets:
+								<option value="${set.set_id}">${set.name}</option>
+								% endfor
+							</select>
+							<select class="input-medium" name="problem_id">
+								<option selected="selected" disabled="disabled" value="0"> --- Select Problem ---</option>
+								% for problem in problems:
+								<option value="${problem.problem_id}">${problem.name}</option>
+								% endfor
+							</select>
+							<button type="submit" class="btn">Create</button>
+						</form>
+						<table class="table table-condensed table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<th>Link ID</th>
+									<th>Set ID</th>
+									<th>Problem ID</th>
+									<th></th>
+								</tr>
+							</thead>
+							<tbody data-atype="link">
+								% for link in links:
+								<tr class="linkrow" data-id="link.link_id">
+									<td class="linkrow-id">${link.link_id}</td>
+									<td class="linkrow-setid">${link.set_id}</td>
+									<td class="linkrow-probid">${link.problem_id}</td>
+									<td class="linkrow-delete">
+										<button type="button" data-loading-text="Deleting..." class="deletebtn btn btn-danger">Delete</button>
+									</td>
+								</tr>
+								% endfor
+							</tbody>
+						</table>
+					</div>
+					
+				</div>
+			</div>
+		</div>
+	</div>
+</%block>

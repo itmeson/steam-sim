@@ -7,44 +7,50 @@
 </%block>
 
 <%block name="scripts">
-	% if initsession:
-		$.cookie('steam_token', "${initsession}", { expires: 1, path: '/' });
-		window.getsession();
-	% endif
-	
-	$(".editable-attr").editable({
-		placement: 'right',
-		pk: ${session.user_id},
-		url: '/ajax/editprofile',
-		send: 'always',
-		success: function(response, newValue) {
-			if(response.success) {
-				return {newValue: newValue}
-			} else {
-				return response.message;
+<script type="text/javascript">
+	$(document).ready(function(){
+		% if initsession:
+			$.cookie('steam_token', "${initsession}", { expires: 1, path: '/' });
+			window.getsession();
+		% endif
+		
+		console.log("Test");
+		
+		$(".editable-attr").editable({
+			placement: 'right',
+			pk: ${session.user_id},
+			url: '/ajax/editprofile',
+			send: 'always',
+			success: function(response, newValue) {
+				if(response.success) {
+					return {newValue: newValue}
+				} else {
+					return response.message;
+				}
 			}
-		}
-	});
-	
-	$(".editable-attr").hover(
-		function(event){
-			console.log("");
-			$(this).parent().find(".editicon").css({'opacity': 1.0});
-		},
-		function(event){
-			$(this).parent().find(".editicon").css({'opacity': 0.0});
-		}
-	);
-	
-	$(".fileupload-save").click(function(event){
-		event.preventDefault();
+		});
 		
-		$(this).closest('form').submit();
+		$(".editable-attr").hover(
+			function(event){
+				console.log("");
+				$(this).parent().find(".editicon").css({'opacity': 1.0});
+			},
+			function(event){
+				$(this).parent().find(".editicon").css({'opacity': 0.0});
+			}
+		);
 		
-		return false;
+		$(".fileupload-save").click(function(event){
+			event.preventDefault();
+			
+			$(this).closest('form').submit();
+			
+			return false;
+		});
+		
+		$('.fileupload').fileupload();
 	});
-	
-	$('.fileupload').fileupload();
+</script>
 </%block>
 
 <%block name="content">

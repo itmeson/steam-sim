@@ -7,7 +7,9 @@
 </%block>
 
 <%block name="scripts">
-	
+<script type="text/javascript">
+$(document).ready(function(){
+
 	% if not success:
 		var fields = ${fields};
 		$("#login_username").val(fields['username']);
@@ -32,6 +34,8 @@
 		
 		return false;
 	});
+});
+</script>
 </%block>
 
 <%block name="content">
@@ -44,11 +48,11 @@
 					<div class="alert alert-error messagebox"><button type="button" class="close" data-dismiss="alert">&times;</button><i class="icon-warning-sign"></i>&nbsp;</div>
 					<div class="input-prepend">
 						<span class="add-on"><i class="icon-user"></i></span>
-						<input class="span2" type="text" name="username" id="login_username" placeholder="Username">
+						<input class="span2" type="text" name="username" id="login_username" placeholder="Username" />
 					</div>
 					<div class="input-prepend">
 						<span class="add-on"><i class="icon-key"></i></span>
-						<input class="span2" type="password" name="password" id="login_password" placeholder="Password">
+						<input class="span2" type="password" name="password" id="login_password" placeholder="Password" />
 					</div>
 					<a class="btn btn-info disabled" id="login_submit" href="#">
 					<i class="icon-lock"></i> Login</a>

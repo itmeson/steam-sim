@@ -8,7 +8,7 @@ from database import Database
 from emailer import Emailer
 from profilemanager import ProfileManager
 from problemmanager import ProblemManager
-from utils import timestamp
+from utils import timestamp, DictObj
 
 # Placeholders for our helpers
 logger = None
@@ -19,9 +19,12 @@ emailer = None
 profile = None
 problems = None
 
+
+##
 # Called by /index.py
 # Performs initial setup after helpers are injected into this module
 # Necessary to later avoid circular imports
+##
 def configure(): 
 	global lookup, db, auth, logger, emailer, profile, problems
 	
@@ -46,15 +49,21 @@ def configure():
 	# Initialize Problem Manager
 	problems = ProblemManager(db, auth, profile)
 
+
+##
 # Convenience function for mako template lookup & rendering
 # handles template lookup, global variables, and encoding automagically
+##
 def tmplr(name, *args, **kwargs):
 	session = auth.getSession()
 	kwdict = {'ROOT_URL': config['global']['ROOT_URL'], 'authenticated': auth.authenticated(), 'admin': auth.is_admin(), 'superadmin': auth.is_superadmin(), 'session': session, 'profile': profile.getProfile(session.user_id) if session.success else None}
 	kwdict.update(kwargs)
 	return lookup.get_template(name).render_unicode(**kwdict).encode('utf-8', 'replace')
 
+
+##
 # Dynamically handles errors - HTTP 404, 500, etc...
+##
 def handle_error(status, message, traceback, version):
 	# This check allows the failsafe omission of trailing slashes on URLs
 	if cherrypy.request.path_info[-1] == "/":
@@ -65,22 +74,53 @@ def handle_error(status, message, traceback, version):
 		# TODO: Determine what kind of error!
 		return str(tmplr("404.html", test1="<h2>404<h2>", test2="<br />File Not Found<br /><pre>%s</pre>" % str(traceback)))
 
+
+##
+# Public Views
+##
 class STEAM(object):
 	
+	# --------
 	# Homepage
 	# /
+	# --------
 	@cherrypy.expose
 	def index(self):
 		return tmplr("home.html")
 	
-	# Problems Page
-	# /problems
-	@cherrypy.expose
-	def problems(self):
-		return tmplr("problems.html")
 	
+	# --------
+	# About Page
+	# /about
+	# --------
+	@cherrypy.expose
+	def about(self):
+		return tmplr("about.html")
+	
+	
+	# --------
+	# Problems Page
+	# /problems[/:category | #category]
+	# --------
+	@cherrypy.expose
+	def problems(self, category=None):
+		return tmplr("problems.html", category=category, problems=DictObj({'science': problems.getProblemSet(1), 'technology': problems.getProblemSet(2), 'engineering': problems.getProblemSet(3), 'art': problems.getProblemSet(4), 'math': problems.getProblemSet(5)}))
+	
+	# --------
+	# View Problem Page
+	# /problems/:category/:slug
+	# --------
+	@cherrypy.expose
+	def view_problem(self, category, slug):
+		
+		
+		
+		return tmplr("view_problem.html", category=category, slug=slug)
+	
+	# --------
 	# Register Page
 	# /register
+	# --------
 	@cherrypy.expose
 	def register_page(self, **kwargs):
 		if cherrypy.request.method != 'POST':
@@ -119,8 +159,11 @@ class STEAM(object):
 		
 		return tmplr("register.html", success=True, message="Thank you for registering! We will be sending you a confirmation email shortly.")
 	
+	
+	# --------
 	# Login Page
 	# /login
+	# --------
 	@cherrypy.expose
 	def login_page(self, **kwargs):
 	
@@ -141,8 +184,30 @@ class STEAM(object):
 			session = auth.getSession(result.token)
 			return tmplr("user_account.html", initsession=result.token, authenticated=auth.authenticated(result.token), admin=auth.is_admin(result.token), superadmin=auth.is_superadmin(result.token), session=session, profile=profile.getProfile(session.user_id) if session.success else None)
 	
+	
+	# --------
+	# Ajax: Javascript Error Logging
+	# /ajax/jslog
+	# --------
+	@cherrypy.expose
+	def ajax_jslog(self, **kwargs):
+		if cherrypy.request.method != 'POST':
+			raise cherrypy.HTTPError(404)
+		
+		with open("%s" % config['global']['log.js_file'], 'a+') as jslog:
+			jslog.write("\n[%s] <%s><%s: Line %s> %s" % (timestamp(), kwargs['href'], kwargs['script'], kwargs['line'], kwargs['msg']))
+		
+		return json.dumps({'success': True})
+
+
+##
+# Auth Views
+##
+class Auth(object):
+	# --------
 	# Activate Page
 	# /auth/activate
+	# --------
 	@cherrypy.expose
 	def auth_activate(self, **kwargs):
 		
@@ -173,8 +238,11 @@ class STEAM(object):
 		session = auth.getSession(lresult.token)
 		return tmplr("user_account.html", initsession=lresult.token, authenticated=auth.authenticated(lresult.token), admin=auth.is_admin(lresult.token), superadmin=auth.is_superadmin(lresult.token), session=session, profile=profile.getProfile(session.user_id) if session.success else None)
 	
+	
+	# --------
 	# Auth: Logout
 	# /auth/logout
+	# --------
 	@cherrypy.expose
 	def auth_logout(self):
 		
@@ -182,37 +250,37 @@ class STEAM(object):
 		
 		raise cherrypy.HTTPRedirect("/login")
 	
+	
+	# --------
 	# Auth: Get Session
 	# /auth/getsession
+	# --------
 	@cherrypy.expose
 	def auth_getsession(self):
 		return json.dumps(auth.getSession())
-	
-	# Ajax: Javascript Error Logging
-	# /ajax/jslog
-	@cherrypy.expose
-	def ajax_jslog(self, **kwargs):
-		if cherrypy.request.method != 'POST':
-			raise cherrypy.HTTPError(404)
-		
-		with open("%sjavascript_errors.log" % config['global']['log.js_file'], 'a+') as jslog:
-			jslog.write("\n[%s] <%s><%s: Line %s> %s" % (timestamp(), kwargs['href'], kwargs['script'], kwargs['line'], kwargs['msg']))
-		
-		return json.dumps({'success': True})
 
+
+##
+# Account Views
+##
 class Account(object):
+	
+	# --------
 	# User Account Page
 	# /user/account
+	# --------
 	@cherrypy.expose
 	def user_account(self):
 		if not auth.authenticated():
 			raise cherrypy.HTTPRedirect("/login")
 		
 		return tmplr("user_account.html")
-		
 	
+	
+	# --------
 	# Ajax Edit Profile
 	# /ajax/editprofile
+	# --------
 	@cherrypy.expose
 	def edit_profile(self, **kwargs):
 		if cherrypy.request.method != 'POST':
@@ -224,9 +292,12 @@ class Account(object):
 		result = profile.updateProfile(kwargs)
 			
 		return json.dumps(result)
-
+	
+	
+	# --------
 	# Ajax Edit Image
 	# /ajax/editimage
+	# --------
 	@cherrypy.expose
 	def edit_image(self, **kwargs):
 		if cherrypy.request.method != 'POST':
@@ -245,6 +316,92 @@ class Account(object):
 			
 		raise cherrypy.HTTPRedirect("/user/account")
 
+
+##
+# SuperAdmin Views
+##
 class Admin(object):
-	# For any admin views we have
+	# For any Admin views we have.
+	# Admin would be any normal user with raised privileges.
 	pass
+
+
+##
+# SuperAdmin Views
+##
+class SuperAdmin(object):
+	# SuperAdmins are people with full control over the website.
+	# Currently these are the only existing types of admins.
+	
+	# --------
+	# - Admin: Problems Page
+	# - /admin/problems
+	# --------
+	@cherrypy.expose
+	def admin_problems(self):
+		if not auth.is_admin():
+			raise cherrypy.HTTPRedirect("/login")
+		
+		return tmplr("admin_problems.html", problems=problems.getAllProblems(), urls=problems.getAllProblemURLs(), links=problems.getAllSetLinks(), sets=problems.getAllProblemSets(), handlers=problems.getHandlers())
+	
+	
+	# --------
+	# - Ajax: Problems Edit
+	# - /ajax/problems
+	# --------
+	@cherrypy.expose
+	def ajax_problems(self, **kwargs):
+		if not auth.is_superadmin():
+			raise cherrypy.HTTPError(404)
+		
+		if cherrypy.request.method != "POST":
+			raise cherrypy.HTTPError(404)
+		
+		if not all(k in kwargs for k in ('action', 'atype')):
+			return json.dumps({'success': False, 'ecode': 0, 'message': "All fields are required"})
+		
+		if kwargs['action'] not in ['delete', 'create']:
+			return json.dumps({'success': False, 'ecode': 1, 'message': "Invalid action"})
+		
+		user = auth.getSession()
+		
+		if kwargs['atype'] == "problem":
+			if kwargs['action'] == "delete":
+				if 'id' not in kwargs:
+					return json.dumps({'success': False, 'ecode': 0, 'message': "Problem id not provided"})
+				problems.deleteProblem(kwargs['problem_id'])
+			
+			elif kwargs['action'] == "create":
+				if not all(k in kwargs for k in ('ptype', 'name', 'slug', 'desc', 'background', 'handler')):
+					return json.dumps({'success': False, 'ecode': 0, 'message': "All fields are required"})
+				
+				result = problems.createProblem(kwargs['ptype'], kwargs['name'], kwargs['slug'], kwargs['desc'], kwargs['background'], kwargs['handler'], user.user_id, kwargs['urls'].split(','))
+				
+				return json.dumps(result)
+
+		elif kwargs['atype'] == "url":
+			if kwargs['action'] == "delete":
+				if 'id' not in kwargs:
+					return json.dumps({'success': False, 'ecode': 0, 'message': "Url id not provided"})
+				problems.deleteProblemURL(kwargs['url_id'])
+			elif kwargs['action'] == "create":
+				if not all(k in kwargs for k in ('problem_id', 'url')):
+					return json.dumps({'success': False, 'ecode': 0, 'message': "All fields are required"})
+				
+				result = problems.createProblemURL(kwargs['problem_id'], kwargs['url'])
+				return json.dumps(result)
+		
+		elif kwargs['atype'] == "link":
+			if kwargs['action'] == "delete":
+				if 'id' not in kwargs:
+					return json.dumps({'success': False, 'ecode': 0, 'message': "Link id not provided"})
+				problems.deleteSetLink(kwargs['link_id'])
+			elif kwargs['action'] == "create":
+				if not all(k in kwargs for k in ('set_id', 'problem_id')):
+					return json.dumps({'success': False, 'ecode': 0, 'message': "All fields are required"})
+				
+				result = problems.createSetLink(kwargs['set_id'], kwargs['problem_id'])
+				return json.dumps(result)
+		
+		raise cherrypy.HTTPRedirect(cherrypy.response.headers['Location'])
+

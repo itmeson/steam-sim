@@ -41,15 +41,19 @@
 			<a class="brand" href="/">S.T.E.A.M.</a>
 			<div class="nav-collapse collapse">
 			<ul class="nav">
-				<li class="active"><a href="/">Home</a></li>
-				<li><a href="/about">About</a></li>
-				<li><a href="/problems">Problems</a></li>
-				<li><a href="/register">Register</a></li>
-				<li>
-					<form class="navbar-search pull-left" action="/search" method="POST">
-						<input type="text" class="search-query" placeholder="Search">
-					</form>
+				<li class="navhome"><a href="/">Home</a></li>
+				<li class="navabout"><a href="/about">About</a></li>
+				<li class="navproblems"><a href="/problems">Problems</a></li>
+				<li class="navregister"><a href="/register">Register</a></li>
+				% if superadmin:
+				<li class="dropdown">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown">Admin <b class="caret"></b></a>
+					<ul class="dropdown-menu">
+						<li class="nav-header">Manage</li>
+						<li><a href="/admin/problems">Problems</a></li>
+					</ul>
 				</li>
+				% endif
 			</ul>
 			% if not authenticated:
 				<form class="navbar-form pull-right" id="login_form_inline" method="POST" action="/login">
@@ -116,7 +120,6 @@
 	<script type="text/javascript">
 		$(document).ready(function() {
 			
-			//base.html global js
 			$(".brand").qtip({
 				content: {
 					text: "Science, Technology, Engineering, Art, and Math!"
@@ -210,11 +213,8 @@
 			{
 				window.getsession();
 			}
-			
-			//child template js
-			<%block name="scripts"></%block>
 		});
 	</script>
-
+	<%block name="scripts"></%block>
 	</body>
 </html>

@@ -7,7 +7,26 @@
 </%block>
 
 <%block name="scripts">
-	
+<script type="text/javascript">
+	$(document).ready(function(){
+		$(".navproblems").addClass('active');
+		
+		% if category:
+			$("#${category}, .${category}").addClass("active");
+		% else:
+			if(window.location.hash != "") {
+				var id = window.location.hash.substr(1);
+				$(["#", id, ", .", id].join('')).addClass("active");
+			} else {
+				$("#science, .science").addClass("active");
+			}
+		% endif
+		
+		$(".tablink").click(function(){
+			window.location.hash = $(this).attr("href");
+		});
+	});
+</script>
 </%block>
 
 <%block name="content">
@@ -15,16 +34,47 @@
 		<div class="span12">
 			<div class="tabbable tabbable-bordered">
 				<ul class="nav nav-tabs">
-					<li class="active"><a href="#tab1" data-toggle="tab">Section 1</a></li>
-					<li><a href="#tab2" data-toggle="tab">Section 2</a></li>
+					<li class="science"><a class="tablink" href="#science" data-toggle="tab">
+						<span class="label label-science"><i class="icon-beaker"></i> Science</span>
+					</a></li>
+					<li class="technology"><a class="tablink" href="#technology" data-toggle="tab">
+						<span class="label label-technology"><i class="icon-cogs"></i> Technology</span>
+					</a></li>
+					<li class="engineering"><a class="tablink" href="#engineering" data-toggle="tab">
+						<span class="label label-engineering"><i class="icon-wrench"></i> Engineering</span>
+					</a></li>
+					<li class="art"><a class="tablink" href="#art" data-toggle="tab">
+						<span class="label label-art"><i class="icon-picture"></i> Art</span>
+					</a></li>
+					<li class="math"><a class="tablink" href="#math" data-toggle="tab">
+						<span class="label label-math"><i class="icon-bar-chart"></i> Math</span>
+					</a></li>
 				</ul>
 				<div class="tab-content">
-					<div class="tab-pane active" id="tab1">
-						<p>I'm in Section 1.</p>
+					% for problemset in problems.values():
+					<div class="tab-pane" id="${problemset.name.lower()}">
+						<table class="table table-condensed table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<th>Name</th>
+									<th>Authored By</th>
+									<th>Solved</th>
+									<th>Success Ratio</th>
+								</tr>
+							</thead>
+							<tbody>
+								% for problem in problemset.problems:
+								<tr class="probrow">
+									<td class="probrow-name">${problem.name}</td>
+									<td class="probrow-name">${problem.creator.first_name} ${problem.creator.last_name}</td>
+									<td class="probrow-name">N/A</td>
+									<td class="probrow-name">N/A</td>
+								</tr>
+								% endfor
+							</tbody>
+						</table>
 					</div>
-					<div class="tab-pane" id="tab2">
-						<p>Howdy, I'm in Section 2.</p>
-					</div>
+					% endfor
 				</div>
 			</div>
 		</div>

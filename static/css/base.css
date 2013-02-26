@@ -181,6 +181,38 @@ body {
 /*-- End user_account.html --*/
 
 
+/*-- admin_problems.html --*/
+
+.tablink {
+	border-top: 1px solid #EEEEEE !important;
+	border-left: 1px solid #EEEEEE !important;
+	border-right: 1px solid #EEEEEE !important;
+}
+
+.probrow-delete,
+.urlrow-delete
+{
+	width: 75px;
+}
+
+.probrow-type
+{
+	width: 60px;
+}
+
+.probrow-id,
+.urlrow-id,
+.urlrow-probid,
+.linkrow-id,
+.linkrow-setid,
+.linkrow-probid
+{
+	width: 20px;
+}
+
+/*-- End admin_problems.html --*/
+
+
 /*++ Bootstrap Custom ++*/
 
 .label-science, .badge-science, .bar-science {
