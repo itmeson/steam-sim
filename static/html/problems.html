@@ -23,7 +23,9 @@
 		% endif
 		
 		$(".tablink").click(function(){
-			window.location.hash = $(this).attr("href");
+			if(window.location.pathname == "/admin/problems") {
+				window.location.hash = $(this).attr("href");
+			}
 		});
 	});
 </script>

@@ -202,9 +202,9 @@ class ProblemManager(object):
 			return Result({'success': False, 'ecode': 0, 'message': "Problem with that name already exits"})
 		
 		self.db.insert(self.problems, {'type': ptype, 'name': name, 'slug': slug, 'desc': desc, 'background': background, 'handler': handler, 'creator': creator})
-		problem = self.db.select(self.problems, self.problems.c.name == name)
+		problems = self.db.select(self.problems, self.problems.c.name == name)
 		for url in urls:
-			self.db.insert(self.urls, {'problem_id': problem.id, 'url': url})
+			self.createProblemURL(problems[0].id, url)
 		return Result({'success': True})
 	
 	
@@ -262,6 +262,8 @@ class ProblemManager(object):
 	# ----------
 	def deleteProblem(self, problem_id):
 		self.db.delete(self.problems, self.problems.c.id == problem_id)
+		self.db.delete(self.links, self.links.c.problem_id == problem_id)
+		self.db.delete(self.urls, self.urls.c.problem_id == problem_id)
 		return Result({'success': True})
 	
 	
@@ -294,14 +296,18 @@ class ProblemManager(object):
 	# ----------
 	def deleteProblemSet(self, set_id):
 		self.db.delete(self.problemsets, self.problemsets.c.id == set_id)
+		self.db.delete(self.links, self.links.c.set_id == set_id)
 		return Result({'success': True})
 	
 	
 	# ----------
 	# - Delete Set Link
 	# ----------
-	def deleteSetLink(self, set_id, problem_id):
-		self.db.delete(self.links, and_(self.links.c.set_id == set_id, self.links.c.problem_id == problem_id))
+	def deleteSetLink(self, link_id=None, set_id=None, problem_id=None):
+		if link_id:
+			self.db.delete(self.links, self.links.c.id == link_id)
+		else:
+			self.db.delete(self.links, and_(self.links.c.set_id == set_id, self.links.c.problem_id == problem_id))
 	
 	# ----------
 	# - Delete All Set Links

@@ -42,7 +42,7 @@ dispatcher.connect('edit_profile', '/ajax/editprofile', account.edit_profile)
 dispatcher.connect('edit_image', '/ajax/editimage', account.edit_image)
 
 # ----------
-# - SuperAdmin Pages
+# - Admin Pages
 # ----------
 # None Yet!
 

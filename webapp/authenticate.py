@@ -125,7 +125,7 @@ class AuthHelper(object):
 	# Auth: Delete stale sessions
 	##
 	def deleteStaleSessions(self):
-		self.db.raw("DELETE FROM %s WHERE lastupdate < (NOW() - INTERVAL 10 MINUTE)" % self._sessions)
+		self.db.raw("DELETE FROM %s WHERE lastupdate < (NOW() - INTERVAL 1 HOUR)" % self._sessions)
 		return Result({'success': True})
 	
 	##

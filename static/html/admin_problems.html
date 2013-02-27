@@ -23,7 +23,9 @@
 		% endif
 		
 		$(".tablink").click(function(){
-			window.location.hash = $(this).attr("href");
+			if(window.location.pathname == "/admin/problems") {
+				window.location.hash = $(this).attr("href");
+			}
 		});
 		
 		$(".deletebtn").click(function(){
@@ -38,6 +40,7 @@
 				data: {
 					action: "delete",
 					atype: $(row).parent().attr('data-atype'),
+					returnurl: $(row).parent().attr('data-returnurl'),
 					id: id
 				}
 			}).done(function(data) {
@@ -74,9 +77,10 @@
 						<form class="form-inline span12 offset1" method="POST" action="/ajax/problems">
 							<input type="hidden" name="action" value="create" />
 							<input type="hidden" name="atype" value="problem" />
+							<input type="hidden" name="returnurl" value="#problems" />
 							<input type="text" class="input-small" name="name" placeholder="Name" />
 							<input type="text" class="input-small" name="slug" placeholder="Slug" />
-							<select class="input-medium" name="type">
+							<select class="input-medium" name="ptype">
 								<option selected="selected" disabled="disabled" value="0"> --- Select Type ---</option>
 								<option value="0">Science</option>
 								<option value="1">Technology</option>
@@ -84,14 +88,15 @@
 								<option value="3">Art</option>
 								<option value="4">Math</option>
 							</select>
-							<textarea class="input-medium" name="desc" placeholder="Description"></textarea>
-							<textarea class="input-medium" name="background" placeholder="Background"></textarea>
+							<textarea class="input-small" name="desc" placeholder="Description"></textarea>
+							<textarea class="input-small" name="background" placeholder="Background"></textarea>
 							<select class="input-medium" name="handler">
 								<option selected="selected" disabled="disabled" value="0"> --- Select Handler ---</option>
 								% for handler in handlers:
 								<option value="${handler}">${handler}</option>
 								% endfor
 							</select>
+							<textarea class="input-medium" name="urls" placeholder="URLs, comma seperated, no spaces"></textarea>
 							<button type="submit" class="btn">Create</button>
 						</form>
 						<table class="table table-condensed table-striped table-bordered table-hover">
@@ -108,7 +113,7 @@
 									<th></th>
 								</tr>
 							</thead>
-							<tbody data-atype="problem">
+							<tbody data-atype="problem" data-returnurl="#problems">
 								% for problem in problems:
 								<tr class="probrow" data-id="${problem.problem_id}">
 									<td class="probrow-id">${problem.problem_id}</td>
@@ -145,7 +150,8 @@
 						<form class="form-inline span12 offset1" method="POST" action="/ajax/problems">
 							<input type="hidden" name="action" value="create" />
 							<input type="hidden" name="atype" value="url" />
-							<select class="input-medium" name="handler">
+							<input type="hidden" name="returnurl" value="#problemurls" />
+							<select class="input-medium" name="problem_id">
 								<option selected="selected" disabled="disabled" value="0"> --- Select Problem ---</option>
 								% for problem in problems:
 								<option value="${problem.problem_id}">${problem.name}</option>
@@ -163,7 +169,7 @@
 									<th></th>
 								</tr>
 							</thead>
-							<tbody data-atype="url">
+							<tbody data-atype="url" data-returnurl="#problemurls">
 								% for url in urls:
 								<tr class="urlrow" data-id="${url.url_id}">
 									<td class="urlrow-id">${url.url_id}</td>
@@ -183,6 +189,7 @@
 						<form class="form-inline span12 offset1" method="POST" action="/ajax/problems">
 							<input type="hidden" name="action" value="create" />
 							<input type="hidden" name="atype" value="link" />
+							<input type="hidden" name="returnurl" value="#problemsetlinks" />
 							<select class="input-medium" name="set_id">
 								<option selected="selected" disabled="disabled" value="0"> --- Select Problem Set ---</option>
 								% for set in sets:
@@ -206,9 +213,9 @@
 									<th></th>
 								</tr>
 							</thead>
-							<tbody data-atype="link">
+							<tbody data-atype="link" data-returnurl="#problemsetlinks">
 								% for link in links:
-								<tr class="linkrow" data-id="link.link_id">
+								<tr class="linkrow" data-id="${link.link_id}">
 									<td class="linkrow-id">${link.link_id}</td>
 									<td class="linkrow-setid">${link.set_id}</td>
 									<td class="linkrow-probid">${link.problem_id}</td>

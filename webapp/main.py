@@ -338,11 +338,11 @@ class SuperAdmin(object):
 	# - /admin/problems
 	# --------
 	@cherrypy.expose
-	def admin_problems(self):
+	def admin_problems(self, category=None):
 		if not auth.is_admin():
 			raise cherrypy.HTTPRedirect("/login")
 		
-		return tmplr("admin_problems.html", problems=problems.getAllProblems(), urls=problems.getAllProblemURLs(), links=problems.getAllSetLinks(), sets=problems.getAllProblemSets(), handlers=problems.getHandlers())
+		return tmplr("admin_problems.html", category=category, problems=problems.getAllProblems(), urls=problems.getAllProblemURLs(), links=problems.getAllSetLinks(), sets=problems.getAllProblemSets(), handlers=problems.getHandlers())
 	
 	
 	# --------
@@ -357,7 +357,7 @@ class SuperAdmin(object):
 		if cherrypy.request.method != "POST":
 			raise cherrypy.HTTPError(404)
 		
-		if not all(k in kwargs for k in ('action', 'atype')):
+		if not all(k in kwargs for k in ('action', 'atype', 'returnurl')):
 			return json.dumps({'success': False, 'ecode': 0, 'message': "All fields are required"})
 		
 		if kwargs['action'] not in ['delete', 'create']:
@@ -369,39 +369,42 @@ class SuperAdmin(object):
 			if kwargs['action'] == "delete":
 				if 'id' not in kwargs:
 					return json.dumps({'success': False, 'ecode': 0, 'message': "Problem id not provided"})
-				problems.deleteProblem(kwargs['problem_id'])
+				problems.deleteProblem(kwargs['id'])
 			
 			elif kwargs['action'] == "create":
-				if not all(k in kwargs for k in ('ptype', 'name', 'slug', 'desc', 'background', 'handler')):
+				if not all(k in kwargs for k in ('ptype', 'name', 'slug', 'desc', 'background', 'handler', 'urls')):
 					return json.dumps({'success': False, 'ecode': 0, 'message': "All fields are required"})
 				
 				result = problems.createProblem(kwargs['ptype'], kwargs['name'], kwargs['slug'], kwargs['desc'], kwargs['background'], kwargs['handler'], user.user_id, kwargs['urls'].split(','))
 				
-				return json.dumps(result)
+				if not result.success:
+					return json.dumps(result)
 
 		elif kwargs['atype'] == "url":
 			if kwargs['action'] == "delete":
 				if 'id' not in kwargs:
 					return json.dumps({'success': False, 'ecode': 0, 'message': "Url id not provided"})
-				problems.deleteProblemURL(kwargs['url_id'])
+				problems.deleteProblemURL(kwargs['id'])
 			elif kwargs['action'] == "create":
 				if not all(k in kwargs for k in ('problem_id', 'url')):
 					return json.dumps({'success': False, 'ecode': 0, 'message': "All fields are required"})
 				
 				result = problems.createProblemURL(kwargs['problem_id'], kwargs['url'])
-				return json.dumps(result)
+				if not result.success:
+					return json.dumps(result)
 		
 		elif kwargs['atype'] == "link":
 			if kwargs['action'] == "delete":
 				if 'id' not in kwargs:
 					return json.dumps({'success': False, 'ecode': 0, 'message': "Link id not provided"})
-				problems.deleteSetLink(kwargs['link_id'])
+				problems.deleteSetLink(link_id=kwargs['id'])
 			elif kwargs['action'] == "create":
 				if not all(k in kwargs for k in ('set_id', 'problem_id')):
 					return json.dumps({'success': False, 'ecode': 0, 'message': "All fields are required"})
 				
 				result = problems.createSetLink(kwargs['set_id'], kwargs['problem_id'])
-				return json.dumps(result)
+				if not result.success:
+					return json.dumps(result)
 		
-		raise cherrypy.HTTPRedirect(cherrypy.response.headers['Location'])
+		raise cherrypy.HTTPRedirect("/admin/problems%s" % kwargs['returnurl'])
 
