@@ -12,7 +12,8 @@ class ProblemManager(object):
 		
 		self.handlers = Result({
 							"SummationHandler": SummationHandler(),
-							"AdditionHandler": AdditionHandler()
+							"AdditionHandler": AdditionHandler(),
+							"ConversionHandler": ConversionHandler()
 						})
 		
 		self.type = enum(Science=1,
